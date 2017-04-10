@@ -1,0 +1,35 @@
+\documentclass[11pt]{report}
+
+\usepackage{url}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern} % monospace font
+\usepackage[scale=0.89]{tgheros} % Helvetica is too big
+\usepackage[osf]{Baskervaldx} % tosf in text, tlf in math
+\usepackage[baskervaldx,cmintegrals,bigdelims,vvarbb]{newtxmath} % math italic letters from Baskervaldx
+\usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
+
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{sectsty}
+\allsectionsfont{\bfseries\sffamily}
+
+\usepackage{lipsum}
+\usepackage{microtype}
+
+\title{Self-Optimizing Networks}
+\author{Clement Lee}
+\date{May 2017}
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\include{chapters/background}
+
+\include{chapters/relatedworks}
+
+\nocite{*}
+\bibliographystyle{acm}
+\bibliography{ref}
+\end{document}
