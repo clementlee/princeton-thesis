@@ -32,8 +32,8 @@ def model(input):
         w1 = tf.concat([tw1, w1], 1)
 
         fb1 = tf.get_variable("hbias", [FULL_CAPACITY])
-        b1 = tf.slice(fb1, [b], [e])
         tb1 = tf.stop_gradient(tf.slice(fb1, [0], [b]))
+        b1 = tf.slice(fb1, [b], [e])
         b1 = tf.concat([tb1, b1], 0)
 
         h = tf.nn.relu(tf.matmul(input, w1) + b1)
