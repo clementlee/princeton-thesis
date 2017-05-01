@@ -1,2 +1,3 @@
 cifar-100-binary/
+checkpoints/
 *.pyc

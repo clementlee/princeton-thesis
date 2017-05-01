@@ -116,12 +116,12 @@ with tf.Session() as sess:
 
     RESIZE_MAX = 10
     untilresize = RESIZE_MAX
-    increment = 0.25
+    increment = 1.0
     start = 0.0
     capac = increment
 
     cycles = 3
-    for i in xrange(100000):
+    for i in xrange(1000):
         batch = mnist.train.next_batch(BATCH_SIZE)
         if i%100 == 0:
             sys.stdout.flush()
