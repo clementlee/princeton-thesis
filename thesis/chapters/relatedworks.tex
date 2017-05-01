@@ -1,4 +1,41 @@
 \chapter{Related Works}
 
 In this work, we are primarily interested in optimizing neural network architectures and other hyperparameters.
+Towards this end, we investigate current findings in the literature.
+To the best of our knowledge, neural network architecture self-optimization is a very new topic, and many results are preliminary or perhaps somewhat incomplete.
+Nevertheless, they provide an important glimpse into the contemporary research space, and are highly motivational to the specific topic of this thesis.
+The aim of this section is to cover some of the existing work that specifically focuses on network optimization, and to provide some grounding for our contributions.
 
+\section{Parameter Deletion}
+Ever since neural networks have been developed, experts have wondered how to make them more efficient.
+The fixed initial structure required to train a network is one that is inherently overparametrized, because the minimum number of parameters needed is not known ahead of time.
+Making the problem worse, neural network training is often slow and requires significant computational power, limiting the ability to test out differing numbers of parameters.
+The natural solution is, therefore, to train an oversized network, and to somehow whittle it down to size.
+Initial practices were based on heuristic deletion; that is, algorithms that deleted all weights $w$ where $w < p$ for some low-pass filter $p$.
+These methods generally result in a sparse network (where the network has missing connections), which are difficult to represent and operate on efficiently.
+
+LeCun et al.'s early work from 1989, \emph{Optimal Brain Damage} \cite{lecun1989optimal}, showed that these heuristic-based methods were inefficient and could irreparably destroy a network.
+He proposed a method based on error gradients that could more accurately find weights that contribute 
+By what is effectively the butterfly effect, the deletion of a weight with small magnitude could actually prove to have a significant impact on the network.
+
+This was taken a step further by Hassibi et al. \cite{hassibi1993second} in their followup work, \emph{Optimal Brain Surgeon}.
+By analyzing the Hessian matrix of the network, 
+% TODO: describe hessian -- or maybe do this with lecun as a starter?
+Hassibi et al.'s algorithm is among the most detailed methods shown to delete weights from a network, and they show that their algorithm is in fact optimal for specific small networks.
+However, the calculation of the Hessian is an $O(n^2)$ operation in both space and time, making it largely unsuitable for networks in the modern age, where $n$ (the number of parameters) is often in the millions or tens of millions.
+At the same time,
+
+\section{Specialized Architectures}
+Another key direction taken by researchers is to design the network specifically to minimize 
+
+Google's Inception network \cite{szegedy2015going}, developed by Szegedy et al., has gone through various iterations, which all involve complex pooling of different convolutional kernel sizes.
+In their 2016 update to the architecture \cite{szegedy2016rethinking}, they focus on tuning the inefficiently large filter sizes used in the previous revision.
+They note that a $5\times 5$ convolution is effectively the same (covers the same area) as two $3\times 3$ convolutions while requiring more parameters (25 versus $9 \cdot 2 = 18$), dubbing this reduction as filter factorization.
+In the same vein, it is possible to reduce a $3\times 3$ convolution to a $3\times 1$ convolution followed by a $1\times 3$ convolution, which requires a third less parameters.
+
+There are various benefits to an increased number of smaller layers beyond parameter reduction.
+Firstly, it allows the increased application of nonlinear activation functions, which are generally regarded as critical for learning complex problems.
+Secondly, 
+
+
+\section{Network Expansion}

@@ -8,12 +8,15 @@
 %\usepackage[osf]{Baskervaldx} % tosf in text, tlf in math
 %\usepackage[baskervaldx,cmintegrals,bigdelims,vvarbb]{newtxmath} % math italic letters from Baskervaldx
 \usepackage[lf]{ebgaramond}
+\usepackage{amsmath}
 \usepackage[cmintegrals,cmbraces]{newtxmath}
-\usepackage{ebgaramond-maths}
+%\usepackage{ebgaramond-maths}
 \usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
+\DeclareMathOperator{\Activ}{Activ}
+\DeclareMathOperator{\Cost}{Cost}
 
 \usepackage{subcaption}
-\usepackage{graphicx}
+\usepackage[draft]{graphicx}
 \usepackage{sectsty}
 \allsectionsfont{\bfseries\sffamily}
 
@@ -26,12 +29,21 @@
 \begin{document}
 %\include{titlepage}
 
-%\tableofcontents
+\tableofcontents
 
+\include{chapters/introduction}
 
 \include{chapters/background}
 
 \include{chapters/relatedworks}
+
+\include{chapters/methodology}
+
+\include{chapters/experiments}
+
+\include{chapters/discussion}
+
+\include{chapters/conclusion}
 
 \nocite{*}
 \bibliographystyle{acm}

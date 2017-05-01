@@ -1,42 +1,125 @@
 \chapter{Background}
 
+In this section, we provide a general introduction to the relevant basics of deep learning.
+
+
+\section{Neural Networks}
 The foundational principle of neural networks is, in its purest form, inspired by the biology of the human brain.
 The field of AI has often modelled new algorithms after biological phenomena; in this field, genetic algorithms are based on evolution and particle swarm optimization is based on social behaviors.
+The history of neural networks dates back to the beginnings of artificial intelligence research, and from those times a few fundamentals still remain.
 
+Firstly, the structure of a basic feedforward network was established.
+In a general sense, a neural network is a directed graph, with neurons as nodes and weights as edges.
+Every neuron activates (outputs) with a strength that is a function that is the element-wise multiplication of the inputs with the edge weights.
+That is, if $w_{i,j}$ is the weight value between nodes $i$ and $j$, $n_i$ is the activation of node $i$, and $N_j$ is the list of node indices that are connected to $j$, then node $j$ will activate with strength
+\[n_j = F\left(\sum_{i \in N_j} w_{i,j}n_i \right)\]
+This definition relies on an activation function $F$, which allows the network to produce nonlinear behaviors.
+We can provide input into the neural network by activating a set of nodes with specific values, and we can similarly read output from any subset of nodes.
+A feedforward network is then any acyclic neural network.
+These networks are typically organized in layers of neurons, which indicate the depth of each node.
+In this model, layers are typically fully connected, meaning that all nodes in one layer are connected to all nodes of the next layer.
+This allows a computationally-efficient model of weights as a matrix $M$, taking input vector $V$ to output vector $MV$.
 
-LeCun et al's seminal work in this field, \emph{Gradient-Based Learning Applied to Document Recognition} \cite{lecun1998gradient}, provided the first basis of using backpropagation methodologies to train visual classifiers.
+Throughout modern literature, feedforward networks are an important but rarely examined component; the structure is often considered fixed and serves to provide a final classification.
+Key limitations to fully connected layers prevent them from being suitable for use as the sole structure of larger networks.
+For example, because of the fully connected nature of the layers, they require an immense amount of memory.
+Such a layer between two sets of just 10000 nodes would require 100 million parameters, while modern networks often have a total of 10 million parameters \cite{han2015learning}.
+This extra capacity, while being inefficient, can also be bad for training in general; there is no sense of locality in such a layer, as every node is treated individually.
+This means that it is difficult and nearly impossible to train higher level features that should be treated equally across all areas of the input (which is of particular interest to problems like image classification).
+
+The other key insight of neural networks is backpropagation, which is an algorithm to let errors accumulated from the output layer of the network propagate backwards through the network, training it in the process.
+As in the example above, if the network's output is $O$, but the correct response would be $C$, we can calculate the error $E = O - C$.
+From this, we need a cost function that determines how errors are judged; a typical example may be the $L_2$ loss
+\[\Cost(O - C) = \sum_0^n || O_i - C_i ||^2 \]
+However, since we know that
+\[O = F\left(\sum_0^n w_i a_i\right)\]
+it is possible to figure out the influence each weight had on the error by taking the partial derivative of the cost function with respect to the weight,
+\begin{align*}
+\frac{\partial \Cost}{\partial a_i} &= 
+\end{align*}
+Modern training methods are far more advanced, but still rely on the basic algorithm described here, which is often termed gradient descent.
+The main 
+
+LeCun et al.'s seminal work in this field, \emph{Gradient-Based Learning Applied to Document Recognition} \cite{lecun1998gradient}, provided the first basis of using backpropagation methodologies to train visual classifiers.
 Even more importantly, it introduced the fundamental structure of the modern visual deep learning network.
 In its usage of convolutions as a method for extracting high-level features out of larger images, it set the framework for a new style of network that would prove to be far more efficient and scalable.
 
+\section{Convolutions}
 A convolution is a operator applied to two functions $f$ and $g$, which provides a way of interpreting one function in the context of the other.
 The operation is generally defined as
 \[(f * g)(t) = \int_{-\infty}^\infty f(r)g(t-r) dr\]
 In the perspective of modern deep learning, we are primarily interested in its usage as a matrix operator; in this context, we limit the range of $g$ to the size of the matrix $s$ such that
 \[(f * g)(t) = \int_0^s f(r)g(t-r) dr\]
 In this context, we refer to $g$ as the \emph{convolutional kernel}.
-Using a convolutional kernel to preprocess the image proves to be a critical to the performance of modern deep learning methods, as a small kernel can operate over a large image in parallel.
-Figure~\ref{fig:gimp_edge} shows a simple convolutional kernel can produce high-level details of an image.
-In this example, we consider the basic edge-detecting matrix 
+Using a convolutional kernel to preprocess the image proves to be critical to the performance of modern deep learning methods, as a small kernel can operate over a large image in parallel.
+
+For example, we consider the basic edge-detecting matrix 
 \[E = \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0\end{bmatrix}\]
+This convolution will perform the element-wise matrix multiplication of the kernel $E$ with the immediate neighbors of each pixel, then aggregate the elements by summation.
+That is, if the pixel values around a specific pixel $e$ are 
+\[P_e = \begin{bmatrix} a & b & c \\ d & e & f \\ g & h & i\end{bmatrix}\]
+then the convolution at that pixel will be
+\begin{align*}
+P_e * E &= 0a + 1b + 0c + 1d -4e + 1f + 0g+ 1h + 0i \\
+&= (b + d + f + h) - 4e
+\end{align*}
+Accordingly, it will create a new matrix, with each element representing the convolutional kernel applied at that point.
+As shown above, the convolution $P_e * E$ will have the strongest activation when there is a strong difference between the pixel $e$ and its neighbors ($b$, $d$, $f$, and $h$), thus performing a basic localized form of edge detection.
+Figure~\ref{fig:gimp_edge} shows this convolution applied to an arbitrary image.
 
 
 \begin{figure}[!htb]
-    \begin{subfigure}{0.5\textwidth}
+  \begin{subfigure}{0.5\textwidth}
     \centering
     \includegraphics{images/gimp_original}
-    \end{subfigure}%
-    %
-    \begin{subfigure}{0.5\textwidth}
+  \end{subfigure}%
+  %
+  \begin{subfigure}{0.5\textwidth}
     \centering
     \includegraphics{images/gimp_edgedetect}
-    \end{subfigure}
+  \end{subfigure}
 
-\caption{A demonstration of an edge-detecting convolution, from the GIMP User's Manual. \cite{gimpconvolution}}
-\label{fig:gimp_edge}
+  \caption{A demonstration of an edge-detecting convolution, from the GIMP User's Manual. \cite{gimpconvolution}}
+  \label{fig:gimp_edge}
 \end{figure}
 
-Convolutional neural networks are therefore the product of using these 
-
+A convolutional neural network is therefore the product of chaining together convolutions to perform efficient feature extraction with the standard feedforward neural network structure.
+LeCun's contribution to this structure was showing that the same backpropagation methods used to train other networks could also be applied to convolutional layers, allowing convolutional neural networks (CNNs) to learn their own feature extractors.
+This allows the CNN to determine what kinds of high-level feature extraction is necessary for the specific problem; applying this across a variety of filters demonstrates 
+More importantly, this allows for networks to automatically chain convolutional layers, in which the initial information can pass through multiple layers of feature extraction, which are all automatically deteremind from the training data.
 % overparametrization
 
+\section{Modern Training}
+%batchnorm
 
+%dropout
+
+%activation functions (relu, prelu, elu, pelu)
+
+\section{Residual Networks}
+As network architectures have changed over time, an ongoing goal has been to develop truly deep architectures.
+Even as better training algorithms have allowed network depth to increase to tens of layers, it is a generally-held principle that depth, not width, is crucial for allowing a network to learn complex features.
+At the same time, gradient-descent methods work poorly in networks with significant depth, as the gradient term (the partial derivative of the loss function with respect to the weight) decreases significantly by each layer.
+This means that after a certain amount of depth in the network, the gradient is so small that it is nearly entirely noise.
+The issue of disappearing gradient is in some form mitigated by training methods, some of which are more heavily biased towards the sign of the gradient rather than the magnitude.
+However, regardless of the specific algorithm, gradients are effectively unusable for networks with significant depth for typical network architectures.
+
+To solve this problem, He et al. \cite{he2016deep} developed Residual Networks.
+The insight in this work is that typical network layers are effectively performing two tasks simultaneously---the transfer of state alongside feature extraction/classification.
+The former requirement necessitates that the layer learn an encoding of its input, which is inefficient.
+He et al. rewrite the typical neural network architecture to allow it to merely learn the latter task, and apply this as a residual (or equivalently, difference) to the inputs.
+That is, if a typical neural network layer takes input $X$, it will apply the layer $L$ to produce $L(X)$.
+A residual network layer takes the input, then outputs the layer's contribution in summation with the original input to produce $L(X) + X$.
+Beyond the theoretical improvements to the ``task'' of the layer, it is also crucially important that this identity mapping for $X$ in a residual layer allows the gradient to propagate backwards with its original magnitude.
+This ensures that the gradient is present at every layer with reasonable strength, allowing the calculations for error on the specific layer operation $L$ to be done with less noise.
+He et al. used this structure to produce a 152-layer network, which is almost an order of magnitude increase over previous methods. 
+This result was enough to win ILSVRC in 2015, an industry-standard annual image classification competition, demonstrating the efficacy of the algorithm.
+
+With regards to this thesis, residual networks have a very important property that a layer which is entirely zero (where $L = 0$) results in a layer that simply produces the identity.
+This means that it is easier to insert and remove residual network layers than in typical architectures.
+Along these lines, Huang et al. \cite{huang2016deep} introduce Stochastic Depth, which randomly drops layers during the training phase as a form of regularization and ensuring that every layer learns something different.
+This is very similar to the usage of Dropout in training, except entire layers are dropped.
+
+Further expanding on He et al.'s work, Zaguruyko and Komodakis \cite{zagoruyko2016wide} assert that residual networks are equally suited to creating wide networks as they are for deep ones; their testing indicates that it is possible to use the residual network framework effectively for networks of comparatively shallow depth (16 layers).
+This is of particular interest because it indicates the difficulty of determining optimal network architectures; the benefits of wide residual networks are dependent on the specific classification problem, and the 
+ 
