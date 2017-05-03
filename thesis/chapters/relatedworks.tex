@@ -16,26 +16,48 @@ These methods generally result in a sparse network (where the network has missin
 
 LeCun et al.'s early work from 1989, \emph{Optimal Brain Damage} \cite{lecun1989optimal}, showed that these heuristic-based methods were inefficient and could irreparably destroy a network.
 He proposed a method based on error gradients that could more accurately find weights that contribute 
+
+\emph{ < finish this description > }
+
 By what is effectively the butterfly effect, the deletion of a weight with small magnitude could actually prove to have a significant impact on the network.
 
 This was taken a step further by Hassibi et al. \cite{hassibi1993second} in their followup work, \emph{Optimal Brain Surgeon}.
 By analyzing the Hessian matrix of the network, 
+
+\emph{ < actually describe the Hessian, or do this with LeCun's example above > }
+
 % TODO: describe hessian -- or maybe do this with lecun as a starter?
 Hassibi et al.'s algorithm is among the most detailed methods shown to delete weights from a network, and they show that their algorithm is in fact optimal for specific small networks.
 However, the calculation of the Hessian is an $O(n^2)$ operation in both space and time, making it largely unsuitable for networks in the modern age, where $n$ (the number of parameters) is often in the millions or tens of millions.
 At the same time,
 
-\section{Specialized Architectures}
-Another key direction taken by researchers is to design the network specifically to minimize 
+Within the last few years, the literature on parameter deletion is beginning to see more activity, especially as networks grow in complexity at a pace that far outpaces the corresponding technological advancements.
 
+\emph{ < describe modern successes with using heuristic-based deletion, and some preliminary research on using optimal brain damage with large networks > }
+
+\section{Specialized Architectures}
+Another key direction taken by researchers is to design the network specifically to minimize the number of parameters required.
+Notable work in this field includes Squeezenet \cite{iandola2016squeezenet} by Iandola et al., which utilizes a number of space-saving tricks to produce a network which has 50 times less parameters.
+Perhaps even more interestingly, Courbariaux and Bengio show that it is possible to constrain a network entirely to binary weights and activations (either $+1$ or $-1$) without significant loss in accuracy.
+They are able to construct a convolutional neural network in this way, and optimize it for CPU performance to achieve competitive results.
+These results are largely corroborated by Rastegari et al. \cite{rastegari2016xnor}, who also use a binarized network and significant usage of the XNOR operation to optimize a wider variety of modern networks.
+It is important to note, however, that the performance of these methods is still insufficient to reliably overtake GPU networks.
+Courbariaux and Bengio perform their training against ``an unoptimized GPU kernel'', while Rastegari et al. perform an efficiency investigation but do not discuss raw performance.
+While such approaches show promise in the future, they are more complicated and are still far away from seeing general use in modern libraries.
+
+On the other hand, it is not necessary to impose such harsh limits on the network in order to find areas of improvement.
 Google's Inception network \cite{szegedy2015going}, developed by Szegedy et al., has gone through various iterations, which all involve complex pooling of different convolutional kernel sizes.
 In their 2016 update to the architecture \cite{szegedy2016rethinking}, they focus on tuning the inefficiently large filter sizes used in the previous revision.
 They note that a $5\times 5$ convolution is effectively the same (covers the same area) as two $3\times 3$ convolutions while requiring more parameters (25 versus $9 \cdot 2 = 18$), dubbing this reduction as filter factorization.
 In the same vein, it is possible to reduce a $3\times 3$ convolution to a $3\times 1$ convolution followed by a $1\times 3$ convolution, which requires a third less parameters.
 
 There are various benefits to an increased number of smaller layers beyond parameter reduction.
-Firstly, it allows the increased application of nonlinear activation functions, which are generally regarded as critical for learning complex problems.
-Secondly, 
+It allows the increased application of nonlinear activation functions, which are generally regarded as critical for learning complex problems.
+Furthermore, it allows an increased number of layers with the same number of parameters.
+Most networks are primarily limited by memory, especially as modern training algorithms require a 
+Even though inference is generally more efficient, it can still remain a difficult problem for more constrained hardware; part of Squeezenet's contribution was the possibility of reducing a model to a size that could be run on modern FPGAs.
 
 
 \section{Network Expansion}
+
+\emph{ < describe early (1990s) approaches to network expansion, there's another modern paper that does a little expansion but not as interesting perhaps > }

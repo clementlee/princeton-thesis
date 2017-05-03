@@ -1,6 +1,19 @@
 \chapter{Methodology}
-In this section, we provide a description of the kinds 
+In this section, we provide a description of the algorithmic details that we propose.
 
 \section{Dynamic Network Capacity}
+Network design has almost always focused on preferring overparametrization; this principle is clear 
+
+\emph{ < The network will start at a very small size, and gradually resize as error plateaus. This is a more ``visible'' approach to network architecture because error rates are clear and interpretable, versus the obtuse parameter of network size. > }
+
+
+
+
+
+\section{Fixed Networks}
+
+\emph{ < Some parts of the network are fixed as the network resizes. This is to prevent them from changing too significantly over time. I'm still experimenting with unfreezing these parts of the network. There's an interesting parallel to the human brain here I believe. > }
 
 \section{Layer-Specific Analysis}
+
+\emph{ < In the residual network paper, they discuss looking at activations of each layer and investigating the standard deviations. I'm interested in using these to determine where extra layer capacity is needed; once CIFAR-100 is running, this will promptly follow. > }
