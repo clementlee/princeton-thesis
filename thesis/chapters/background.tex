@@ -27,7 +27,7 @@ Such a layer between two sets of just 10000 nodes would require 100 million para
 This extra capacity, while being inefficient, can also be bad for training in general; there is no sense of locality in such a layer, as every node is treated individually.
 This means that it is difficult and nearly impossible to train higher level features that should be treated equally across all areas of the input (which is of particular interest to problems like image classification).
 
-The other key insight of neural networks is backpropagation, which is an algorithm to let errors accumulated from the output layer of the network propagate backwards through the network, training it in the process.
+The other key insight of neural networks is backpropagation \cite{hecht1988theory}, which is an algorithm to let errors accumulated from the output layer of the network propagate backwards through the network, training it in the process.
 As in the example above, if the network's output is $O$, but the correct response would be $C$, we can calculate the error $E = O - C$.
 From this, we need a cost function that determines how errors are judged; a typical example may be the $L_2$ loss
 \[\Cost(O - C) = \sum_0^n || O_i - C_i ||^2 \]
@@ -40,12 +40,14 @@ it is possible to figure out the influence each weight had on the error by takin
 Modern training methods are far more advanced, but still rely on the basic algorithm described here, which is often termed gradient descent.
 The main 
 
+\emph{< describe modern usage of backprop >}
+
 LeCun et al.'s seminal work in this field, \emph{Gradient-Based Learning Applied to Document Recognition} \cite{lecun1998gradient}, provided the first basis of using backpropagation methodologies to train visual classifiers.
 Even more importantly, it introduced the fundamental structure of the modern visual deep learning network.
 In its usage of convolutions as a method for extracting high-level features out of larger images, it set the framework for a new style of network that would prove to be far more efficient and scalable.
 
 \section{Convolutions}
-A convolution is a operator applied to two functions $f$ and $g$, which provides a way of interpreting one function in the context of the other.
+A convolution is an operator applied to two functions $f$ and $g$, which provides a way of interpreting one function in the context of the other.
 The operation is generally defined as
 \[(f * g)(t) = \int_{-\infty}^\infty f(r)g(t-r) dr\]
 In the perspective of modern deep learning, we are primarily interested in its usage as a matrix operator; in this context, we limit the range of $g$ to the size of the matrix $s$ such that
@@ -87,10 +89,12 @@ A convolutional neural network is therefore the product of chaining together con
 LeCun's contribution to this structure was showing that the same backpropagation methods used to train other networks could also be applied to convolutional layers, allowing convolutional neural networks (CNNs) to learn their own feature extractors.
 This allows the CNN to determine what kinds of high-level feature extraction is necessary for the specific problem; applying this across a variety of filters demonstrates 
 More importantly, this allows for networks to automatically chain convolutional layers, in which the initial information can pass through multiple layers of feature extraction, which are all automatically deteremind from the training data.
-% overparametrization
 
 \section{Modern Training}
+While the basics of neural network training are covered above, there are significant improvements that we highlight in this section for the sake of completeness.
 %batchnorm
+
+\emph{< talk about batch normalization, dropout, different activation functions >}
 
 %dropout
 
@@ -122,4 +126,6 @@ This is very similar to the usage of Dropout in training, except entire layers a
 
 Further expanding on He et al.'s work, Zaguruyko and Komodakis \cite{zagoruyko2016wide} assert that residual networks are equally suited to creating wide networks as they are for deep ones; their testing indicates that it is possible to use the residual network framework effectively for networks of comparatively shallow depth (16 layers).
 This is of particular interest because it indicates the difficulty of determining optimal network architectures; the benefits of wide residual networks are dependent on the specific classification problem, and the 
+
+\emph{ < talk about the wide varieties of residual network architectures, and how it's hard to pick the right one > }
  

@@ -1,9 +1,108 @@
-\chapter{Experiments}
+\chapter{Experiments and Results}
 \section{Implementation}
-%tensorflow, dynamic graph structure
+We performed all of our experiments within Google's Tensorflow \cite{abadi2016tensorflow} framework.
+Tensorflow imposes a style of computation which is not immediately adaptable to our experiments, but it was nevertheless chosen for its prevalence and impact on current methods.
+Its popularity has largely affected the number of open-source code samples available, and many current architectures have clear examples in Tensorflow.
+The thriving ecosystem of open-source contributions around Tensorflow proved to be a highly beneficial factor in providing a variety of existing architectures for experimentation.
+
+As was noted before, Tensorflow operates in a slightly different way than many other libraries.
+Rather than allowing the user to chain together operations at random, it fixes a computational graph which defines the full model.
+Google's developers preferred this static model as it is generally well-suited to a lot of deep learning research, while also being flexible enough to allow distributed computing (of crucial importance to a a cloud company like Google).
+This, however, poses an obvious problem with our algorithm, which is largely dynamic.
+A few workarounds had to be developed in order to interface with the static computational graph.
+While it is possible to use conditional blocks to disable parts of the graph, it is impossible to insert during runtime.
+As such, the entire possible network capacity has to be allocated upfront, which potentially reduces the range of experimentation.
+This additionally means that while parts of the network can be disabled, they still take important parameter space which cannot be reallocated to other parts of the network.
+
+In his work on spatially-sparse convolutional neural networks \cite{graham2014spatially}, Graham noted that there are potential improvements in architecture by performing sparse convolutions.
+Tensorflow does not support such functionality at the moment, although it appears that they may be planning its development for the future \cite{spatiallysparseconv}.
+For our experiments, we continue to rely on densely-connected networks
+% EXPLAIN PLS
+
+Other libraries were explored briefly, but they either did not provide the necessary flexibility or have a reasonable set of tutorials/examples to facilitate the work here.
+For example, one of the more common tools in imag e-based deep learning has been Caffe \cite{jia2014caffe}, which boasts well-tuned performance as well as a public repository of models in the Caffe Model Zoo.
+Unfortunately, being written almost entirely in C++, it is largely unamenable to testing and infrastructure development.
+Modifying Caffe to implement new training methods typically requires a significant contribution in C++, which requires an overhead not often undertaken except by researchers with significant prior experience.
+Furthermore, models are loaded in a fixed format, which hampers the ability to dynamically redefine networks.
+On the other side of the spectrum are libraries like Keras, which usually serve as a higher-level wrapper to other deep learning libraries.
+They were generally judged as being insufficiently expressive for the type of modifications we performed, so we considered other options.
+
+All experimentation was performed on a GTX 1060, which was provided via a grant from Princeton SEAS.
+GPU computation has widely become the standard for deep learning computation in recent years, as it can provide nearly an order of magnitude in performance.
+Particularly for models like modern residual networks, which can take days to converge to reasonable accuracy, it is nearly impossible to train neural networks on CPU servers.
+Tensorflow still utilizes the CPU extensively to coordinate training and perform a significant amount of calculations, but modern-day GPUs are nearly perfectly designed for the type of computations required for convolutions.
+
+A recent glut of libraries aimed at helping automate the deep learning deployment process has led to a variety of different methods.
+NVIDIA's CUDA and CUDNN libraries, both of which re crucial for the performance of modern deep learning libraries, require a complex set of dependencies and installation procedures.
+To automate this process, NVIDIA has recently released the \texttt{nvidia-docker} tool, which provides an abstraction on top of Docker that is designed to expose the GPU without requiring a complex installation method for the requisite GPU drivers.
+We use this library to deploy CUDNN v5, as well as the latest GPU drivers and Tensorflow version as of this writing (375.39 and 1.1.0-rc0, respectively).
+
+As Tensorflow's interface is best utilized in Python, we performed some initial testing with the Jupyter application.
+Jupyter exposes a dynamic notebook interface that allows ``cells'' of code to be run in an interactive instance, which also shows outputs inline.
+Despite being relatively useful for basic prototyping, the largely static nature of Tensorflow's graph structure meant that for the larger tests, there was little to no developer-side improvement over traditional coding.
+Nevertheless, we note that Jupyter is a useful interface for demonstrating concepts, as many Tensorflow code examples online are in Jupyter \texttt{.ipynb} format.
+In particular, GitHub supports native inline presentation of Jupyter notebooks, which proved to be far more efficient than the typical workflow of downloading code examples, waiting for execution, and parsing terminal output which is often difficult to link to specific code sections.
+Jupyter is, in fact, a first-class citizen in the Tensorflow ecosystem, as it is included in the default \texttt{nvidia-docker} image provided by Google in the online Docker Hub repository.
+
+\subsection{Experimental Details \& Notes}
+Throughout our experiments, we utilize the ADAM optimizer developed by Kingma and Ba \cite{kingma2014adam} as it allows adaptive training without requiring the careful learning rate tuning that is generally required for straightforward gradient-descent optimization.
+
+We also rely on Glorot and Bengio's Xavier initializer \cite{glorot2010understanding}, as it is a common improvement over typical random initialization that remains relatively simple to use.
+
+We fix portions of the network by using Tensorflow's \texttt{tf.stop\_gradient} method.
+Support for freezing whole layers is a generally universal feature across deep learning libraries, but our investigation showed that none supported partial freezing---that is, the ability to train part of a layer while keeping the other part fixed.
+Importantly, because we wish to be able to modify the amount of the layer that is fixed during runtime, it is impossible to decompose this problem into two separate layers.
+Our implementation involves 
+
 
 \section{Function Regression}
+Our first experiment is relatively simplistic, but is also indicative of the basic algorithm's performance.
+In this experiment, we approximate the trigonometric sine function in the range of $[-2\pi, 2\pi]$.
+Our architecture for this experiment is extremely simple: it is merely a feedforward network with one hidden layer consisting of up to 500 nodes.
+This is sufficient capacity to learn the sine function with great accuracy, but can still be heavily affected by the training regime applied to it.
+We investigate the importance of the hidden layer's capacity by testing static networks of 100 and 500 nodes, then comparing these results to a dynamically sizing network.
+
+For this experiment, we split the network into quarters, and initialize them all before any training begins.
+
+\emph{ < Performance here has been very excellent overall. The results were in the presentation. > }
+
+
+
 
 \section{MNIST Classifier}
-\subsection{Repeated Runs}
-% discuss generalization
+Modern deep learning algorithms have generally tended to be developed for image classification purposes, in part due to the original usage of convolutional neural networks.
+LeCun et al.'s original work with CNNs \cite{lecun1998gradient} was in designing a classifier for the MNIST dataset, a collection of monochrome handwritten digits 
+
+Tensorflow includes MNIST support as part of the base installation
+
+\emph{ < As above, this was in my presentation. Results were good, but not as improved as the previous example. Also, it's important to note that small improvements to MNIST are pretty big because of high accuracy overall (99.32 vs 99.37 accuracy) > }
+
+
+\section{CIFAR-100}
+One of the common modern image classification datasets is CIFAR-100, a set of 60000 images collected by researchers at the University of Toronto.
+It consists of 20 classes, each with 5 subclasses.
+For each of the 100 subclasses, there are 500 training images and 100 testing images.
+The images are in color, but are of low resolution at $32\times 32$; the small size of the dataset makes it especially attractive as an experimental problem.
+Larger image classification datasets exist, such as the commonly used ImageNet, but due to its over 150GB download size and consequently longer training times, it was not considered for this thesis.
+Most modern deep learning papers include results on both CIFAR-10 (a smaller version of the same problem) and CIFAR-100; we choose CIFAR-100 as state of the art performance on CIFAR-10 is over 90\%, leading to a closer and less separable grouping of experimental results.
+In doing this, we hope to avoid the problem seen on the MNIST problem, where it is extremely difficult to improve on results that are already nearly perfect.
+
+A particular point of interest with CIFAR-100 is that there are relatively few images per class.
+This means that it is a dataset for which overfitting is a critical concern.
+Typical algorithms, without any specially designed methods, can often achieve around 60\% accuracy on the testing dataset.
+This, however, tends to represent a hard limit, as training accuracy will usually hit nearly 100\% accuracy.
+The difference between testing and training accuracy, especially with the limited data available, is the primary area of improvement for modern algorithms.
+
+\emph{ < CIFAR-100 is a dataset with 10 classes, each with 10 subclasses (e.g. jets, then different kinds of jets). Results are coming up very soon hopefully! > }
+
+\section{Performance}
+We note that our algorithm involves nearly no overhead over the original architecture; a simple timing benchmark over 1000 epochs of MNIST indicates a performance difference of 3.5\% (37.9 seconds versus 36.6 seconds), which is well within the margin of error.
+This is because all of the major time-consuming operations are performed on the GPU, to which our algorithm does not add significant stress.
+
+
+Furthermore, by limiting the capacity of the network, we are able to achieve far faster initial training.
+The initial timing experiment was performed by applying the algorithm but forcing it to use the full capacity of the network initially; this is far from the original intent.
+By utilizing it in the same way as developed for the experiments, the first 1000 epochs of MNIST actually take 11.9 seconds.
+While the algorithm takes more epochs to converge, the increased speed of working through the initial epochs is a significant boon.
+
+\emph{ < Expanding on performance gains here because of the smaller trained network. Also, Tensorflow imposes some other interesting details here because of the array slicing necessary. > }
