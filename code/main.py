@@ -7,6 +7,8 @@ import resnet
 
 import time
 
+from utilities import *
+
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('batch_size', 128, 'Training batch size')
 tf.app.flags.DEFINE_string('checkpoints', 'checkpoints/', 'Checkpoint location')
@@ -16,6 +18,7 @@ tf.app.flags.DEFINE_string('eval_data', 'cifar-100-binary/test.bin',
         'Where to find testing/evaluation data')
 tf.app.flags.DEFINE_string('mode', 'train', 
         'either train or eval')
+
 
 def train():
     images, labels = cifar_input.build_input('cifar100', FLAGS.training_data,
@@ -53,12 +56,44 @@ def train():
             print 'restoring from ' + path
         i = 0
         cap = np.array([[0,0.5] for _ in xrange(resnet.NUM_LAYERS)])
+
+
+        log = MovingAverage()
+        prevavg = 9e9 # large value
+
+        RESIZE_MAX = 30
+        untilresize = RESIZE_MAX
+        increment = 0.2
+        start = 0.0
+        capac = increment
+        cap = np.array([[start,capac] for _ in xrange(resnet.NUM_LAYERS)])
         while True:
             sess.run(train_step, feed_dict={model.cap:cap})
             if i % 100 == 0:
-                print sess.run([accuracy, cross_entropy], 
+                a = sess.run([accuracy, cross_entropy], 
                         feed_dict={model.cap:cap})
+               
+                log.addval(a[0])
+                if log.getavg() <= prevavg and untilresize < 0:
+                    # resizing now
+                    untilresize = RESIZE_MAX
+                    prevavg = 9e9
+                    log = MovingAverage()
+                    if capac < 0.99:
+                        start += increment
+                        capac += increment
+                        capac = min(1.0, capac)
+                        cap = np.array([[start,capac] for _ in xrange(resnet.NUM_LAYERS)])
+                    elif start > 0:
+                        start -= increment
+                        start = max(0, start)
+                        cap = np.array([[start,capac] for _ in xrange(resnet.NUM_LAYERS)])
+                prevavg = log.getavg()
+
+                print "%f, %f, %f, %f" % (a[0], a[1], start, capac)
                 saver.save(sess, FLAGS.checkpoints+'model.ckpt')
+                np.save(FLAGS.checkpoints+'cap.npy', cap)
+                untilresize -= 1
             i += 1
 
 
@@ -83,6 +118,7 @@ def eval():
     while True:
         ckpt_state = tf.train.get_checkpoint_state(FLAGS.checkpoints)
         saver.restore(sess, ckpt_state.model_checkpoint_path)
+        cap = np.load(FLAGS.checkpoints+'cap.npy')
         for _ in xrange(10):
             (truth, predictions) = sess.run([labels,y_conv], feed_dict={model.cap:cap})
             truth = np.argmax(truth, axis=1)
@@ -93,7 +129,7 @@ def eval():
         precision = 1.0 * correct_prediction / total_prediction
         best_precision = max(precision, best_precision)
 
-        print 'precision: %.3f, best precision: %.3f' % (precision, best_precision)
+        print '%f, %f' % (precision, best_precision)
 
         time.sleep(60)
 
