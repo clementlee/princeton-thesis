@@ -1,3 +1,4 @@
 cifar-100-binary/
 checkpoints/
 *.pyc
+checkpoints_base/
