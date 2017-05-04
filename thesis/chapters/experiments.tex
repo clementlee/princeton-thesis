@@ -35,16 +35,28 @@ Tensorflow still utilizes the CPU extensively to coordinate training and perform
 A recent glut of libraries aimed at helping automate the deep learning deployment process has led to a variety of different methods.
 NVIDIA's CUDA and CUDNN libraries, both of which re crucial for the performance of modern deep learning libraries, require a complex set of dependencies and installation procedures.
 To automate this process, NVIDIA has recently released the \texttt{nvidia-docker} tool, which provides an abstraction on top of Docker that is designed to expose the GPU without requiring a complex installation method for the requisite GPU drivers.
-We use this library to deploy CUDNN v5, as well as the latest drivers and Tensorflow version as of this writing.
+We use this library to deploy CUDNN v5, as well as the latest GPU drivers and Tensorflow version as of this writing (375.39 and 1.1.0-rc0, respectively).
 
-\subsection{Experimental Details}
+As Tensorflow's interface is best utilized in Python, we performed some initial testing with the Jupyter application.
+Jupyter exposes a dynamic notebook interface that allows ``cells'' of code to be run in an interactive instance, which also shows outputs inline.
+Despite being relatively useful for basic prototyping, the largely static nature of Tensorflow's graph structure meant that for the larger tests, there was little to no developer-side improvement over traditional coding.
+Nevertheless, we note that Jupyter is a useful interface for demonstrating concepts, as many Tensorflow code examples online are in Jupyter \texttt{.ipynb} format.
+In particular, GitHub supports native inline presentation of Jupyter notebooks, which proved to be far more efficient than the typical workflow of downloading code examples, waiting for execution, and parsing terminal output which is often difficult to link to specific code sections.
+Jupyter is, in fact, a first-class citizen in the Tensorflow ecosystem, as it is included in the default \texttt{nvidia-docker} image provided by Google in the online Docker Hub repository.
+
+\subsection{Experimental Details \& Notes}
 Throughout our experiments, we utilize the ADAM optimizer developed by Kingma and Ba \cite{kingma2014adam} as it allows adaptive training without requiring the careful learning rate tuning that is generally required for straightforward gradient-descent optimization.
 
 We also rely on Glorot and Bengio's Xavier initializer \cite{glorot2010understanding}, as it is a common improvement over typical random initialization that remains relatively simple to use.
 
+We fix portions of the network by using Tensorflow's \texttt{tf.stop\_gradient} method.
+Support for freezing whole layers is a generally universal feature across deep learning libraries, but our investigation showed that none supported partial freezing---that is, the ability to train part of a layer while keeping the other part fixed.
+Importantly, because we wish to be able to modify the amount of the layer that is fixed during runtime, it is impossible to decompose this problem into two separate layers.
+Our implementation involves 
+
 
 \section{Function Regression}
-Our first experiment is a simplistic one, but one that is indicative of the basic algorithm's performance.
+Our first experiment is relatively simplistic, but is also indicative of the basic algorithm's performance.
 In this experiment, we approximate the trigonometric sine function in the range of $[-2\pi, 2\pi]$.
 Our architecture for this experiment is extremely simple: it is merely a feedforward network with one hidden layer consisting of up to 500 nodes.
 This is sufficient capacity to learn the sine function with great accuracy, but can still be heavily affected by the training regime applied to it.
@@ -59,12 +71,28 @@ For this experiment, we split the network into quarters, and initialize them all
 
 \section{MNIST Classifier}
 Modern deep learning algorithms have generally tended to be developed for image classification purposes, in part due to the original usage of convolutional neural networks.
-LeCun et al.'s original work was in designing a classifier for the MNIST dataset, a collection of handwritten digits 
+LeCun et al.'s original work with CNNs \cite{lecun1998gradient} was in designing a classifier for the MNIST dataset, a collection of monochrome handwritten digits 
+
+Tensorflow includes MNIST support as part of the base installation
 
 \emph{ < As above, this was in my presentation. Results were good, but not as improved as the previous example. Also, it's important to note that small improvements to MNIST are pretty big because of high accuracy overall (99.32 vs 99.37 accuracy) > }
 
 
 \section{CIFAR-100}
+One of the common modern image classification datasets is CIFAR-100, a set of 60000 images collected by researchers at the University of Toronto.
+It consists of 20 classes, each with 5 subclasses.
+For each of the 100 subclasses, there are 500 training images and 100 testing images.
+The images are in color, but are of low resolution at $32\times 32$; the small size of the dataset makes it especially attractive as an experimental problem.
+Larger image classification datasets exist, such as the commonly used ImageNet, but due to its over 150GB download size and consequently longer training times, it was not considered for this thesis.
+Most modern deep learning papers include results on both CIFAR-10 (a smaller version of the same problem) and CIFAR-100; we choose CIFAR-100 as state of the art performance on CIFAR-10 is over 90\%, leading to a closer and less separable grouping of experimental results.
+In doing this, we hope to avoid the problem seen on the MNIST problem, where it is extremely difficult to improve on results that are already nearly perfect.
+
+A particular point of interest with CIFAR-100 is that there are relatively few images per class.
+This means that it is a dataset for which overfitting is a critical concern.
+Typical algorithms, without any specially designed methods, can often achieve around 60\% accuracy on the testing dataset.
+This, however, tends to represent a hard limit, as training accuracy will usually hit nearly 100\% accuracy.
+The difference between testing and training accuracy, especially with the limited data available, is the primary area of improvement for modern algorithms.
+
 \emph{ < CIFAR-100 is a dataset with 10 classes, each with 10 subclasses (e.g. jets, then different kinds of jets). Results are coming up very soon hopefully! > }
 
 \section{Performance}
