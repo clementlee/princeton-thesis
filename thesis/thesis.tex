@@ -10,18 +10,38 @@
 \usepackage[lf]{ebgaramond}
 \usepackage{amsmath}
 \usepackage[cmintegrals,cmbraces]{newtxmath}
+\usepackage{listings}
 %\usepackage{ebgaramond-maths}
 \usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
 \DeclareMathOperator{\Activ}{Activ}
 \DeclareMathOperator{\Cost}{Cost}
 
+\usepackage{setspace}
+
+\lstset{basicstyle=\ttfamily, frame=single}
 \usepackage{subcaption}
-\usepackage[draft]{graphicx}
+%\usepackage[draft]{graphicx}
+\usepackage{graphicx}
 \usepackage{sectsty}
+\usepackage{booktabs}
 \allsectionsfont{\bfseries\sffamily}
+
+\makeatletter
+\AtBeginDocument{%
+  \let\c@figure\c@lstlisting
+  \let\c@table\c@lstlisting
+  \let\thefigure\thelstlisting
+  \let\thetable\thelstlisting
+  \let\ftype@lstlisting\ftype@figure % give the floats the same precedence
+  \let\ftype@lstlisting\ftype@table % give the floats the same precedence
+}
+\makeatother
 
 \usepackage{lipsum}
 \usepackage{microtype}
+
+\graphicspath{{images/}{data/sin/}}
+
 
 \setcounter{tocdepth}{1}
 
@@ -29,6 +49,7 @@
 \author{Clement Lee}
 \date{May 2017}
 \begin{document}
+%\doublespacing
 %\include{titlepage}
 
 \tableofcontents
@@ -52,4 +73,8 @@
 \nocite{*}
 \bibliographystyle{acm}
 \bibliography{ref}
+
+\begin{center}
+\emph{This work represents }
+\end{center}
 \end{document}
