@@ -84,9 +84,9 @@ def train():
                         capac += increment
                         capac = min(1.0, capac)
                         cap = np.array([[start,capac] for _ in xrange(resnet.NUM_LAYERS)])
-                    elif start > 0:
+                    elif start > 0.5:
                         start -= increment
-                        start = max(0, start)
+                        start = max(0.5, start)
                         cap = np.array([[start,capac] for _ in xrange(resnet.NUM_LAYERS)])
                 prevavg = log.getavg()
 
