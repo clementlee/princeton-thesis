@@ -143,8 +143,29 @@ That is, while the accuracy is determined by picking the category with the highe
 For example, on a binary classification problem with classes 0 and 1, where the correct response is nearly always 1, a network with constant output activations $[0.49, 0.51]$ would have extremely low error but high cross-entropy loss.
 Using this metric, we note that the cross-entropy loss is lower at the same training error for our methodology, indicating that its outputs are more regularized.
 
+\begin{table}[!htb]
+\centering
+\caption{CIFAR-100 results}
+\label{table:cifar}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Network    & Testing Accuracy & Training Accuracy & Training Loss \\ \midrule
+Standard   & 0.659            & 0.9927            & 0.0221        \\
+Adaptive-1 & 0.582            & 0.8001            & 0.6595        \\
+Adaptive-2 & 0.681            & 0.9557            & 0.1379        \\ \bottomrule
+\end{tabular}
+\end{table}
+
+
 These results are summarized in table
-% ADD DEM CIFAR RESULTS
+
+To improve the performance of this algorithm, we perform another experiment where we gradually allow a limited proportion (50\%) of the network to unfreeze over time.
+We believe that this can be helpful in unlocking some of the limited capacity in the network; in particular, we note that the first few convolutional layers are fed into a very narrow pipeline of only 16 filters at full capacity.
+Our training algorithm limits this further, which may overly constrict the flow of information through the network.
+By leaving at least half of the capacity to be trainable, we attempt to allow sufficient flow for better accuracy.
+This hypothesis is borne out by the results, which show that the new network (entitled ``Adaptive-2'' in the figures) is able to demonstrate a small but significant improvement over the standard network.
+We achieve a stable testing accuracy of 68\%, but interestingly, our 
+
 
 
 \section{Performance}

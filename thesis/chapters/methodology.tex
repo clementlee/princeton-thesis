@@ -1,44 +1,53 @@
 \chapter{Methodology}
-In this section, we provide a description of the algorithms we propose.
-We construct a network structure that allows dynamic resizing and freezing, which has not been investigated on this scale before in the literature.
-We further develop this algorithm to per-layer capacity tuning, which we note can help ensure that every layer is being utilized optimally.
-We then discuss the process of our implementation and a variety of surrounding details.
+In this section, we provide a high-level description of the algorithms we utilize.
+First, we construct a network structure that allows dynamic resizing and freezing, a method which has not been investigated on large scale before in the literature.
+We further develop this algorithm to allow for per-layer capacity tuning, which helps to ensure the optimal utilization of each layer.
+We then discuss the implementation process and its surrounding details.
 
 \section{Dynamic Network Capacity}
 Network design has almost always focused on preferring overparametrization; this principle is clear because underparametrized networks, by definition, simply cannot learn the problem.
-Our method involves defining the network in such a way that network capacity can be expandewith minimal overparametrization. way that, to the best of our knowledge, is unique in the literature.
-This allow a network to be undersized initially, but gradually gain the necessary capacity with minimal overparametrization.
+Our method involves defining the network in such a way that network capacity can be expanded with minimal overparametrization in a way that, to the best of our knowledge, is unique in the literature.
+We reshape the underlying architecture to accept two parameters for each layer, representing the fixed capacity and training capacity.
+We define the fixed capacity of a layer as the number of nodes (or kernels, in the case of a convolutional layer) that are fixed from all training, and the training capacity as the number of nodes that are actively being trained.
+Crucially, these two capacities can change at any moment, and do not have to sum up to the full capacity of the network, meaning that some nodes can remain entirely unused.
+This allows a network to be undersized initially, but gradually gain the necessary capacity with minimal overparametrization.
 In particular, it allows per-layer expansion during runtime while keeping the weights that have already been trained, and performs this efficiently.
 While this requires upfront allocation of the maximum potential capacity due to library constraints, these requirements are not set in stone.
-Furthermore, it is generally desirable to train smaller networks if possible, due to increased speed and less chance of overfitting errors.
-As such, we rework well-known architectures to allow dynamic capacity, which requires a higher-level framework that keeps track of all layer sizes to ensure consistent inputs and outputs.
-In particular, because we explore shortcuts connections as seen in residual networks, this involves holding the necessary structure to ensure that the shortcut is projected to the correct dimension.
+Furthermore, due to increased speed and less chance of overfitting errors, it is generally desirable to train smaller networks if possible.
+As such, we rework well-known network architecture code to allow for dynamic capacity, which requires a higher-level framework that keeps track of all layer sizes to ensure consistent inputs and outputs.
+In particular, because we explore shortcut connections as seen in residual networks, this requires that we hold the necessary structure to ensure that the shortcut is projected to the correct dimension.
 
-For determining how the network should begin to utilize the ability to modify capacity dynamically, in this thesis we focus primarily on expansion.
+To determine how the network should utilize the ability to modify capacity dynamically, we focus primarily on expansion within this thesis.
 We track the moving average of error rates and gradually resize the network as the error plateaus (indicating that it has been trained to capacity).
-This process requires a few new hyperparameters to tune the definition of an error plateau, but allows some other ones, such as  precise network sizing, to be masked away.
+This process requires the introduction of a few new hyperparameters to tune the definition of an error plateau, but allows some other ones, such as  precise network sizing, to be masked away.
 We argue that this is a highly beneficial development for deep learning, as it represents a far more visible approach to network architecture as error rates are clear and interpretable.
 In contrast, beyond some vague sense that larger networks can learn harder problems, the motivation for choosing specific network sizes remains generally unclear.
-Within the field of residual networks alone, results have been published both demonstrating the superiority of prioritizing depth and prioritizing width, leading to a very murky situation.
+Within the field of residual networks alone, results have been published both demonstrating the superiority of prioritizing depth and prioritizing width, leading to potential confusion as to which one to emphasize.
 
 
 \section{Fixed Networks}
-Parameter count is a difficult problem to solve, and one that is especially complicated because it is difficult to remove weights from a network while maintaining efficiently dense connections.
-Rather than deal with the numerous details required here, we regard a different way of modifying the trainable network capacity by freezing parts of the network after they have converged.
+Reducing parameter count is a difficult problem, and one that is especially complicated because it is difficult to remove weights from a network while maintaining efficiently dense connections.
+Rather than deal with the numerous details, we regard a different way of modifying the trainable network capacity by freezing parts of the network after they have converged.
 While this does not decrease model size, it improves the number of parameters that need to be trained, which is a potential point of efficiency.
-We note that this can be more useful than parameter deletion, as sparse networks are not very well supported by deep learning libraries, thus oftentimes necessitating that the ``deleted'' parameters remain in the model but fixed to zero.
-This allows the network to utilize the capacity it has learned but avoids calculating a substantial number of gradients, optimizing the bottleneck of the training process.
-This additionally prevents the network from shifting excessively over time, a problem much like the covariate shift that is often covered by batch normalization.
+We note that this can be more useful than parameter deletion, which often results in sparse networks.
+Sparse networks are not very well supported by deep learning libraries, thus oftentimes necessitating that the ``deleted'' parameters remain in the model but are fixed to zero.
+We specifically avoid parameter deletion, in order to sidestep these issues.
+Our algorithm allows the network to utilize the capacity it has learned but avoids calculating a substantial number of gradients, optimizing the bottleneck of the training process.
+Additionally, this prevents the network from shifting excessively over time, a problem much like the covariate shift that is often covered by batch normalization.
+We implement this by modifying the layer-specific fixed capacity, which we begin to increase as the network learns the problem.
+This ensures that some basic knowldge of the problem is always retained and not susceptible to changes by each training minibatch.
+The specifics of how this fixed capacity increases over time are provided in the experiments chapter.
 
 \section{Layer-Specific Analysis}
 In the original paper on Residual Networks, He et al. analyze the relative strengths of each layer activation.
 To perform this analysis, they record the activations over a minibatch and perform aggregate statistics.
 In particular, they focus on the standard deviation of the layers as a measure of the relative amount of information in each layer, where the mean is less informative as it is largely influenced by the bias terms of the network.
 We aim to utilize this methodology to determine where extra capacity is useful.
-Noting that the standard deviation is not constant across layers, we note that these layers are likely producing more contribution to the end result.
-While this is beneficial, it may also mean that there is an opportunity to increase the capacity of these layers.
+Noting that the standard deviation is not constant across layers, the layers with higher standard deviation are likely contributing more to the end result.
+While this is beneficial for accuracy, it may also mean that there is an opportunity to increase the capacity of these layers.
 He et al.'s analysis indicates that deeper networks have lower activation strength in general, which we can observe to also be smoother.
 We seek to encourage this property by expanding the residual blocks that have the highest activations, noting especially that they tend to occur when the network downsamples the image.
+Once the network has nearly reached full capacity on all layers, we begin to selectively increase training capacity for the layers with the strongest activations to ensure that the increased capacity is deployed where it is specifically needed.
 
 \section{Implementation}
 We performed all of our experiments within Google's Tensorflow \cite{abadi2016tensorflow} framework.
