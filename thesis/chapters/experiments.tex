@@ -1,94 +1,15 @@
-\chapter{Experiments and Results}
-\section{Implementation}
-We performed all of our experiments within Google's Tensorflow \cite{abadi2016tensorflow} framework.
-Tensorflow imposes a style of computation which is not immediately adaptable to our experiments, but it was nevertheless chosen for its prevalence and impact on current methods.
-Its popularity has largely affected the number of open-source code samples available, and many current architectures have clear examples in Tensorflow.
-The thriving ecosystem of open-source contributions around Tensorflow proved to be a highly beneficial factor in providing a variety of existing architectures for experimentation.
-
-As was noted before, Tensorflow operates in a slightly different way than many other libraries.
-Rather than allowing the user to chain together operations at random, it fixes a computational graph which defines the full model.
-Google's developers preferred this static model as it is generally well-suited to a lot of deep learning research, while also being flexible enough to allow distributed computing (of crucial importance to a a cloud company like Google).
-This, however, poses an obvious problem with our algorithm, which is largely dynamic.
-A few workarounds had to be developed in order to interface with the static computational graph.
-While it is possible to use conditional blocks to disable parts of the graph, it is impossible to insert during runtime.
-As such, the entire possible network capacity has to be allocated upfront, which potentially reduces the range of experimentation.
-This additionally means that while parts of the network can be disabled, they still take important parameter space which cannot be reallocated to other parts of the network.
-
-In his work on spatially-sparse convolutional neural networks \cite{graham2014spatially}, Graham noted that there are potential improvements in architecture by performing sparse convolutions.
-Tensorflow does not support such functionality at the moment, although it appears that they may be planning its development for the future \cite{spatiallysparseconv}.
-For our experiments, we continue to rely on densely-connected convolutional layers for the
-% EXPLAIN PLS
-
-Other libraries were explored briefly, but they either did not provide the necessary flexibility or have a reasonable set of tutorials/examples to facilitate the work here.
-For example, one of the more common tools in imag e-based deep learning has been Caffe \cite{jia2014caffe}, which boasts well-tuned performance as well as a public repository of models in the Caffe Model Zoo.
-Unfortunately, being written almost entirely in C++, it is largely unamenable to testing and infrastructure development.
-Modifying Caffe to implement new training methods typically requires a significant contribution in C++, which requires an overhead not often undertaken except by researchers with significant prior experience.
-Furthermore, models are loaded in a fixed format, which hampers the ability to dynamically redefine networks.
-On the other side of the spectrum are libraries like Keras, which usually serve as a higher-level wrapper to other deep learning libraries.
-They were generally judged as being insufficiently expressive for the type of modifications we performed, so we considered other options.
-
-All experimentation was performed on a GTX 1060, which was provided via a grant from Princeton SEAS.
-GPU computation has widely become the standard for deep learning computation in recent years, as it can provide nearly an order of magnitude in performance.
-Particularly for models like modern residual networks, which can take days to converge to reasonable accuracy, it is nearly impossible to train neural networks on CPU servers.
-Tensorflow still utilizes the CPU extensively to coordinate training and perform a significant amount of calculations, but modern-day GPUs are nearly perfectly designed for the type of computations required for convolutions.
-
-A recent glut of libraries aimed at helping automate the deep learning deployment process has led to a variety of different methods.
-NVIDIA's CUDA and CUDNN libraries, both of which re crucial for the performance of modern deep learning libraries, require a complex set of dependencies and installation procedures.
-To automate this process, NVIDIA has recently released the \texttt{nvidia-docker} tool, which provides an abstraction on top of Docker that is designed to expose the GPU without requiring a complex installation method for the requisite GPU drivers.
-We use this library to deploy CUDNN v5, as well as the latest GPU drivers and Tensorflow version as of this writing (375.39 and 1.1.0-rc0, respectively).
-
-As Tensorflow's interface is best utilized in Python, we performed some initial testing with the Jupyter application.
-Jupyter exposes a dynamic notebook interface that allows ``cells'' of code to be run in an interactive instance, which also shows outputs inline.
-Despite being relatively useful for basic prototyping, the largely static nature of Tensorflow's graph structure meant that for the larger tests, there was little to no developer-side improvement over traditional coding.
-Nevertheless, we note that Jupyter is a useful interface for demonstrating concepts, as many Tensorflow code examples online are in Jupyter \texttt{.ipynb} format.
-In particular, GitHub supports native inline presentation of Jupyter notebooks, which proved to be far more efficient than the typical workflow of downloading code examples, waiting for execution, and parsing terminal output which is often difficult to link to specific code sections.
-Jupyter is, in fact, a first-class citizen in the Tensorflow ecosystem, as it is included in the default \texttt{nvidia-docker} image provided by Google in the online Docker Hub repository.
-
-\subsection{Experimental Details \& Notes}
-Throughout our experiments, we utilize the Adam optimizer developed by Kingma and Ba \cite{kingma2014adam} as it allows adaptive training without requiring the careful learning rate tuning that is generally required for straightforward gradient-descent optimization.
-Many typical optimizers require handholding through epochs to achieve optimal results.
-In particular, hyperparameter search can often involve determining the correct timings of when to drop learning rate, which ``slows'' the network's training but also serves to stabilize it.
-As we aim for our algorithm to be as high-level as possible, this represents yet another dimension of optimization, which we choose to avoid for this thesis.
-
-We also rely on Glorot and Bengio's Xavier initializer \cite{glorot2010understanding}, as it is a common improvement over typical random initialization that remains relatively simple to use.
-This poses a small relevant side note to our algorithm; because only parts of the network are initially exposed, the initializer is potentially using incorrect values.
-Network initialization is crucial to achieving good results (one of the famous papers is this field is humorously entitled \emph{All you need is a good init} \cite{mishkin2015all}), and these initializers are dependent on the shape of the variable to determine properties like the variance of a random distribution.
-Due to the lack of dynamic initialization in Tensorflow, we do not investigate this issue further, but it may remains future work to consider developing a custom initializer for this problem.
-
-We fix portions of the network by using Tensorflow's \texttt{tf.stop\_gradient} method.
-Support for freezing whole layers is a generally universal feature across deep learning libraries, but our investigation showed that none supported partial freezing---that is, the ability to train part of a layer while keeping the other part fixed.
-Importantly, because we wish to be able to modify the amount of the layer that is fixed during runtime, it is impossible to decompose this problem into two separate layers.
-Our implementation involves deconstructing a variable into slices before reassembling it; a quick demonstration in pseudocode may be seen in Listing~\ref{lst:var_deconst}.
-This kind of workaround for a lack of inbuilt dynamicism is a typical example of what was necessary to build this structure into Tensorflow.
-
-\begin{lstlisting}[caption={Variable Deconstruction}, label={lst:var_deconst}, captionpos=b]
-# x:              input, full-size variable
-# fix_capacity:   what portion of x to freeze
-# train_capacity: what porition of x to train,
-#                 assumed to be greater than fix_capacity
-f(x, fix_capacity, train_capacity):
-    # slice X according to each capacity
-    fixed = x[:fix_capacity]
-    train = x[fix_capacity:train_capacity]
-
-    # freeze fixed
-    fixed = stop_gradient(fixed)
-
-    # reassemble 
-    new_x = concat(fixed, train)
-
-    return new_x
-\end{lstlisting}
-
-At the same time, we n
-
+\chapter{Experiments}
+In this section, we present our findings.
+We expect that our algorithm will improve the training process for a regular deep learning user, both in the perspective of training performance and in final accuracy.
+This hypothesis is borne out in the smaller datasets, but remains somewhat inconclusive for larger datasets.
+Nevertheless, we note that there are significant points of interest that are raised as a result, and the potential for improvement on this algorithm is encouraging.
 
 \section{Function Regression}
 Our first experiment is relatively simplistic, but is also indicative of the basic algorithm's performance.
 In this experiment, we approximate the trigonometric sine function in the range of $[-2\pi, 2\pi]$.
 Our architecture for this experiment is extremely simple: it is merely a feedforward network with one hidden layer consisting of up to 500 nodes.
 This is sufficient capacity to learn the sine function with great accuracy, but can still be heavily affected by the training regime applied to it.
-We investigate the importance of the hidden layer's capacity by testing static networks of 100 and 500 nodes, then comparing these results to a dynamically sizing network.
+We investigate the importance of the hidden layer's capacity by testing static networks of 100 and 500 nodes, then compare these results to a dynamically sizing network.
 
 For this experiment, we split the network into fifths, and initialize them all before any training begins.
 We initially only let the network use the first fifth of its capacity, making it equivalent to the 100-node static test.
@@ -104,14 +25,14 @@ We see the results of the experiment in Figure~\ref{fig:sin_loss}, in which our 
 \end{figure}
 
 It is immediately clear that our method is able to converge to a much better solution than simple training methods.
-Importantly, we plot the y-axis on the logarithmic scale, so small improvement are in fact extremely significant.
+Importantly, we plot the y-axis on the logarithmic scale, so small improvements are in fact extremely significant.
 Firstly, we note that increasing the capacity of the network from 100 to 500 nodes does not have a significant impact on final error.
 In fact, the 500-node result would generally be considered worse, as it exhibits far noisier behavior.
-To measure these results quantitatively, we consider both the average and the standard deviations of loss over the final 10 samples.
-These results are presented in Table~\ref{table:sin_errors}.
-We can see that the noisier results of the 500-node network are actually noticeably worse when averaged---it has nearly twice the error of the smaller 100-node network.
-Furthermore, the standard deviation is an order of magnitude larger over the 100-node network., which is extremely poor as it is larger than the average error.
-In contrast, the adaptive method exhibits both lower mean and standard deviation
+On quick inspection, the adaptive method is generally superior in every way.
+Surprisingly, however, the adaptive network is initially slower to train compared to the 100-node network, despite utilizing same capacity. 
+We suspect this difference has to do with the potential variances in optimizer and initializer performance discussed above.
+Regardless of its early-stage performance, we can see that it benefits tremendously from increased capacity, and overtakes the both of the static networks by around epoch 35.
+There are some small spikes in error which we attribute to the sudden increase in capacity, but overall the performance is consistently better than that of the static methods.
 
 \begin{table}[!htb]
 \centering
@@ -126,15 +47,59 @@ Adaptive & 0.00024 & 0.000084           \\ \bottomrule
 \end{tabular}
 \end{table}
 
-
+To measure these results quantitatively, we consider both the average and the standard deviations of loss over the final 10 samples.
+These results are presented in Table~\ref{table:sin_errors}.
+We can see that the noisier results of the 500-node network are actually noticeably worse when averaged---it has nearly twice the error of the smaller 100-node network.
+Furthermore, the standard deviation is an order of magnitude larger over the 100-node network., which is extremely poor as it is larger than the average error.
+In contrast, the adaptive method exhibits both lower mean and standard deviation in the long run.
+This indicates an improvement not just in learning capacity, but also in stability, which is a crucial property for training as noisy behavior is indicative of a number of other problems.
+Chief amongst these is the simple problem that noisy behavior makes it difficult to decide when an experiment has concluded.
+In any case, throughout this experiment, the adaptive method has offered significant improvements in performance over either static network.
 
 \section{MNIST Classifier}
 Modern deep learning algorithms have generally tended to be developed for image classification purposes, in part due to the original usage of convolutional neural networks.
-LeCun et al.'s original work with CNNs \cite{lecun1998gradient} was in designing a classifier for the MNIST dataset, a collection of monochrome handwritten digits 
+LeCun et al.'s original work with CNNs \cite{lecun1998gradient} was in designing a classifier for the MNIST dataset, a collection of monochrome handwritten digits.
+These images have been preprocessed for regularity, and have all been resized to a standard $28\times 28$ resolution.
+MNIST is a well-regarded small image classification dataset which serves as a useful benchmark for this algorithm.
 
-Tensorflow includes MNIST support as part of the base installation
 
-\emph{ < As above, this was in my presentation. Results were good, but not as improved as the previous example. Also, it's important to note that small improvements to MNIST are pretty big because of high accuracy overall (99.32 vs 99.37 accuracy) > }
+Tensorflow includes MNIST support as part of the base installation as part of its example code, so we are able to rely on a simple interface to download, load, and process the image data according to standard image augmentation purposes.
+For the purposes of this experiment, we follow the example convolutional neural network provided by Google \cite{deepmnist}, and modify it so we can apply our expansion algorithm.
+This is a typical structure, with two convolutional layers utilizing $7\times 7$ kernels, and then a fully-connected layer of 1024 nodes.
+While this is far from the best known architectures for MNIST, it serves as a good baseline and is easily accessible.
+Once again, we apply our methodology of training the network in portions.
+This time, due to the increased capacity of the network, we instead train it in tenths, once again expanding when the moving average of accuracy begins to stall or decrease.
+
+\begin{figure}[!htb]
+\centering
+\resizebox{0.8\textwidth}{!}{\input{data/mnist/mnist.tex}}
+\caption{MNIST loss trained by different methods.}
+\label{fig:mnist_loss}
+\end{figure}
+
+We show the results of the MNIST classifier in Figure~\ref{fig:mnist_loss}.
+In this experiment, there are significant spikes to the loss when new capacity is added, indicating that the extra capacity produces a significant shock on the network.
+We hypothesize that this is due to the fact that multiple layers are all increasing in capacity simultaneously, which leads to a much more pronounced change in outputs.
+Whereas the previous experiment only involved a single layer, the interactions of additional units that are connected to the original network changes the dynamics significantly.
+This still shows an improvement over the standard network, although the difference is much smaller than previously demonstrated.
+This is likely due to the fact that the error is very low in both examples; typical algorithms achieve over 99\% accuracy on MNIST.
+It appears that the adaptive network is still improving over time but may be limited by the length of the experiment, while the standard network has converged to its best potential.
+We were not able to test this theory more fully due to time constraints, but leave it as a potential point of interest.
+We also report the mean and standard deviation statistics for this experiment in Table~\ref{table:mnist_errors}. 
+This corroborates the close performance between the two networks, but also demonstrates the improvements our adaptive method produces over a standard network of the same final size.
+Both the error and the standard deviation are lower, indicating a mild improvement.
+
+\begin{table}[!htb]
+\centering
+\caption{Comparison on MNIST.}
+\label{table:mnist_errors}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Network  & Mean    & Standard Deviation \\ \midrule
+standard & 0.00686 & 0.000369           \\
+adaptive & 0.00633 & 0.000248           \\ \bottomrule
+\end{tabular}
+\end{table}
 
 
 \section{CIFAR-100}
@@ -144,7 +109,7 @@ For each of the 100 subclasses, there are 500 training images and 100 testing im
 The images are in color, but are of low resolution at $32\times 32$; the small size of the dataset makes it especially attractive as an experimental problem; a few sample images are shown in Figure~\ref{fig:cifar100}.
 Larger image classification datasets exist, such as the commonly used ImageNet, but due to its over 150GB download size and consequently longer training times, it was not considered for this thesis.
 Most modern deep learning papers include results on both CIFAR-10 (a smaller version of the same problem) and CIFAR-100; we choose CIFAR-100 as state of the art performance on CIFAR-10 is over 90\%, leading to a closer and less separable grouping of experimental results.
-In doing this, we hope to avoid the problem seen on the MNIST problem, where it is extremely difficult to improve on results that are already nearly perfect.
+In doing this, we hope to avoid the problem seen on the MNIST dataset, where it is extremely difficult to improve on results that are already nearly perfect.
 
 \begin{figure}[!htb]
 \centering
@@ -174,11 +139,12 @@ This leads us to consider what might be the beginnings of a generalizability met
 
 We also note that that accuracy on the dataset is just one measure of precision.
 During our experiments, we also log the cross-entropy loss, which provides a sense of not just how likely the network was to get the right answer, but how confidently it did so.
-That is, while the accuracy is determined by picking the category with the highest activation, it may have been a very close 
+That is, while the accuracy is determined by picking the category with the highest activation, it may have been a very close decision.
 For example, on a binary classification problem with classes 0 and 1, where the correct response is nearly always 1, a network with constant output activations $[0.49, 0.51]$ would have extremely low error but high cross-entropy loss.
 Using this metric, we note that the cross-entropy loss is lower at the same training error for our methodology, indicating that its outputs are more regularized.
 
 These results are summarized in table
+% ADD DEM CIFAR RESULTS
 
 
 \section{Performance}
@@ -191,6 +157,4 @@ While the algorithm takes more epochs to converge, the increased speed of workin
 In general, any decrease in performance can likely be attributed to the more intricate methods required to perform basic variable operations, recalling Listing~\ref{lst:var_deconst}.
 These are generally considered to be minor; in fact, for most researchers, the choice of deep learning library is rarely for performance reasons, especially for single-GPU servers.
 Nearly all of the time spent is within the intricacies of the CUDNN module which interfaces directly with the GPU.
-Our algorithm adds effectively no stress to the GPU, and even when running at full capacity can speed up training by fixing portions of the network, thus eliminating the need to perform the expensive gradient calculations.
-
-\emph{ < Expanding on performance gains here because of the smaller trained network. Also, Tensorflow imposes some other interesting details here because of the array slicing necessary. > }
+Our algorithm adds effectively no stress to the GPU, and can speed up training even when running at full capacity by fixing portions of the network, thus eliminating the need to perform the expensive gradient calculations.

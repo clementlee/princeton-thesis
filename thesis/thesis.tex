@@ -33,15 +33,13 @@
   \let\thefigure\thelstlisting
   \let\thetable\thelstlisting
   \let\ftype@lstlisting\ftype@figure % give the floats the same precedence
-  \let\ftype@lstlisting\ftype@table % give the floats the same precedence
+  \let\ftype@lstlisting\ftype@table % give tables the same precedence too
 }
 \makeatother
 
-\usepackage{lipsum}
 \usepackage{microtype}
 
-\graphicspath{{images/}{data/sin/}}
-
+\graphicspath{{images/}{data/sin/}{data/mnist/}}
 
 \setcounter{tocdepth}{1}
 

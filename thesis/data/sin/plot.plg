@@ -12,6 +12,6 @@ set ylabel "log loss"
 
 set size ratio 0.5
 
-plot "100-node.txt" title "100-node static" with linespoints ls 1, \
-    "500-node.txt" title "500-node static" with linespoints ls 2, \
-    "adaptive.txt" title "adaptive" with linespoints ls 3
+plot "100-node.txt" title "100-node static" with lines ls 1, \
+    "500-node.txt" title "500-node static" with lines ls 2, \
+    "adaptive.txt" title "adaptive" with lines ls 3
