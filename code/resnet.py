@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow.python.training import moving_averages
 
 # constants
-FILTERS = [16, 32, 64, 128]
+FILTERS = [24, 48, 96, 182]
 BLOCKS_PER = 10
 NUM_LAYERS = 3 * BLOCKS_PER 
 NUM_CLASSES = 100
