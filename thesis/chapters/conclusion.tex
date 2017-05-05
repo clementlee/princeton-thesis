@@ -2,6 +2,35 @@
 \section{a brief summary of results}
 \emph{ < what the section title says > }
 
+\section{Limitations}
+There are number of topics that were unfortunately outside the realm of reasonable exploration during the course of this thesis,
 \section{Future Work and Further Notes}
+In his work on spatially-sparse convolutional neural networks \cite{graham2014spatially}, Graham noted that there are potential improvements in architecture by performing sparse convolutions.
+Tensorflow does not support such functionality at the moment, although it appears that they may be planning its development for the future \cite{spatiallysparseconv}.
+For our experiments, we continue to rely on densely-connected convolutional layers.
+Apart from the natural computational efficiency, we note that sparse networks are generally utilized in problems where the problem is seen as less compact or able to exploit the sparse connections---such is not often the case for image classification, which is our primary subject in this thesis.
+We do note, however, that this would be a very interesting way of implementing dynamic network capacity that extends beyond our current implementation.
+Importantly, this may allow the network to suffer less shock as additional capacity is added by initially minimizing the number of connections between the original or fixed section and the newly-added training section.
+In this way, the sections can be trained somewhat like an ensemble of networks that gradually begins to learn some capacity for communication, and having control of this dynamic would be an extremely powerful tool.
+
+% defaults for new hyperparameters
+
+%  dynamic initialization
+
+% user interface
+
+While the hyperparameters for our algorithm were generally chosen on inspection of the testing baseline, we note that it may be possible to develop a reasonable set of defaults for an average user.
+This would be highly beneficial, as it further removes the necessity of tuning.
+Apart from edge cases which would be known to the user, it seems that basic analysis can indicate when convergence is beginning, and the algorithm can adjust accordingly.
+A improved algorithm would perhaps entail a more detailed analysis of previous errors beyond a simple moving average, which would allow it to be smarter about when a resize is necessary, as opposed to occasionally falling for noise in the error.
+
+Another further direction we see is the potential for live user intervention during training.
+In general, most modern methods do not allow any changes to the architecture, meaning that if certain parameters are set poorly but go unnoticed, significant time can be lost as the network will have to start training from scratch.
+Technically, this functionality is available in a very crude sense in our current software, as the data is mostly saved into checkpoints that could be loaded and overwritten.
+This means that by overwriting the current state variables of the algorithm, subsequent runs would then adopt the updated values.
+Especially with Google's Tensorboard software, which allows a Tensorflow network to show its computational graph, log various properties, and much more, we see the potential for users to gradually tune a network on-the-fly.
+In conjunction with our algorithm providing suggestions on network changes, it would be interesting to allow a more technical user to query specific statistics about the network, then make decisions on tuning without necessitating a new and costly training cycle.
+
+
 
 \emph{ < talk about shortcut connections, different trainable parameters, also extend literature to other directions of optimization > }

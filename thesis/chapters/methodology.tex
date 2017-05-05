@@ -1,19 +1,126 @@
 \chapter{Methodology}
-In this section, we provide a description of the algorithmic details that we propose.
+In this section, we provide a description of the algorithms we propose.
+We construct a network structure that allows dynamic resizing and freezing, which has not been investigated on this scale before in the literature.
+We further develop this algorithm to per-layer capacity tuning, which we note can help ensure that every layer is being utilized optimally.
+We then discuss the process of our implementation and a variety of surrounding details.
 
 \section{Dynamic Network Capacity}
-Network design has almost always focused on preferring overparametrization; this principle is clear 
+Network design has almost always focused on preferring overparametrization; this principle is clear because underparametrized networks, by definition, simply cannot learn the problem.
+Our method involves defining the network in such a way that network capacity can be expandewith minimal overparametrization. way that, to the best of our knowledge, is unique in the literature.
+This allow a network to be undersized initially, but gradually gain the necessary capacity with minimal overparametrization.
+In particular, it allows per-layer expansion during runtime while keeping the weights that have already been trained, and performs this efficiently.
+While this requires upfront allocation of the maximum potential capacity due to library constraints, these requirements are not set in stone.
+Furthermore, it is generally desirable to train smaller networks if possible, due to increased speed and less chance of overfitting errors.
+As such, we rework well-known architectures to allow dynamic capacity, which requires a higher-level framework that keeps track of all layer sizes to ensure consistent inputs and outputs.
+In particular, because we explore shortcuts connections as seen in residual networks, this involves holding the necessary structure to ensure that the shortcut is projected to the correct dimension.
 
-\emph{ < The network will start at a very small size, and gradually resize as error plateaus. This is a more ``visible'' approach to network architecture because error rates are clear and interpretable, versus the obtuse parameter of network size. > }
-
-
-
+For determining how the network should begin to utilize the ability to modify capacity dynamically, in this thesis we focus primarily on expansion.
+We track the moving average of error rates and gradually resize the network as the error plateaus (indicating that it has been trained to capacity).
+This process requires a few new hyperparameters to tune the definition of an error plateau, but allows some other ones, such as  precise network sizing, to be masked away.
+We argue that this is a highly beneficial development for deep learning, as it represents a far more visible approach to network architecture as error rates are clear and interpretable.
+In contrast, beyond some vague sense that larger networks can learn harder problems, the motivation for choosing specific network sizes remains generally unclear.
+Within the field of residual networks alone, results have been published both demonstrating the superiority of prioritizing depth and prioritizing width, leading to a very murky situation.
 
 
 \section{Fixed Networks}
-
-\emph{ < Some parts of the network are fixed as the network resizes. This is to prevent them from changing too significantly over time. I'm still experimenting with unfreezing these parts of the network. There's an interesting parallel to the human brain here I believe. > }
+Parameter count is a difficult problem to solve, and one that is especially complicated because it is difficult to remove weights from a network while maintaining efficiently dense connections.
+Rather than deal with the numerous details required here, we regard a different way of modifying the trainable network capacity by freezing parts of the network after they have converged.
+While this does not decrease model size, it improves the number of parameters that need to be trained, which is a potential point of efficiency.
+We note that this can be more useful than parameter deletion, as sparse networks are not very well supported by deep learning libraries, thus oftentimes necessitating that the ``deleted'' parameters remain in the model but fixed to zero.
+This allows the network to utilize the capacity it has learned but avoids calculating a substantial number of gradients, optimizing the bottleneck of the training process.
+This additionally prevents the network from shifting excessively over time, a problem much like the covariate shift that is often covered by batch normalization.
 
 \section{Layer-Specific Analysis}
+In the original paper on Residual Networks, He et al. analyze the relative strengths of each layer activation.
+To perform this analysis, they record the activations over a minibatch and perform aggregate statistics.
+In particular, they focus on the standard deviation of the layers as a measure of the relative amount of information in each layer, where the mean is less informative as it is largely influenced by the bias terms of the network.
+We aim to utilize this methodology to determine where extra capacity is useful.
+Noting that the standard deviation is not constant across layers, we note that these layers are likely producing more contribution to the end result.
+While this is beneficial, it may also mean that there is an opportunity to increase the capacity of these layers.
+He et al.'s analysis indicates that deeper networks have lower activation strength in general, which we can observe to also be smoother.
+We seek to encourage this property by expanding the residual blocks that have the highest activations, noting especially that they tend to occur when the network downsamples the image.
 
-\emph{ < In the residual network paper, they discuss looking at activations of each layer and investigating the standard deviations. I'm interested in using these to determine where extra layer capacity is needed; once CIFAR-100 is running, this will promptly follow. > }
+\section{Implementation}
+We performed all of our experiments within Google's Tensorflow \cite{abadi2016tensorflow} framework.
+Tensorflow imposes a style of computation which is not immediately adaptable to our experiments, but it was nevertheless chosen due to its prevalence within the current literature. 
+Its popularity has largely affected the number of open-source code samples available, and many current architectures have clear examples in Tensorflow.
+The thriving ecosystem of open-source contributions around Tensorflow proved to be a highly beneficial factor in providing a variety of existing architectures for experimentation.
+
+As was noted before, Tensorflow operates in a slightly different way than many other libraries.
+Rather than allowing the user to chain together operations at random, it fixes a computational graph which defines the full model.
+Google's developers preferred this static model as it is generally well-suited to a lot of deep learning research, while also being flexible enough to allow for distributed computing (of crucial importance to a a cloud company like Google).
+This, however, poses an obvious problem with our algorithm, which is largely dynamic.
+Therefore, we had to develop a number of workarounds in order to interface with the static computational graph.
+While it is possible to use conditional blocks to disable parts of the graph, it is impossible to insert layers or other capacity during runtime.
+As such, the entire possible network capacity has to be allocated upfront, which potentially reduces the range of experimentation.
+This additionally means that while parts of the network can be disabled, they still take important parameter space which cannot be reallocated to other parts of the network.
+
+Other libraries were explored briefly, but they either did not provide the necessary flexibility or lacked a reasonable set of tutorials/examples to facilitate the work within this thesis.
+For example, one of the more common tools in image-based deep learning has been Caffe \cite{jia2014caffe}, which boasts well-tuned performance as well as a public repository of models in the Caffe Model Zoo.
+Unfortunately, since Caffe is written almost entirely in C++, it is largely unamenable to testing and infrastructure development.
+Modifying Caffe to implement new training methods typically requires a significant contribution in C++, which requires an overhead not often undertaken except by researchers with significant prior experience.
+Furthermore, models are loaded in a fixed format, which hampers the ability to dynamically redefine networks.
+On the other side of the spectrum are libraries like Keras, which usually serve as a higher-level wrapper to other deep learning libraries.
+They were generally judged as being insufficiently expressive for the type of modifications we performed, so we considered other options.
+
+All experimentation was performed on a GTX 1060, which was provided via a grant from Princeton SEAS.
+In recent years, GPU computation has become the standard for deep learning computation, as it can increase performance by nearly an order of magnitude.
+Particularly for models like modern residual networks, which can take days to converge to reasonable accuracy, it is nearly impossible to train neural networks on CPU servers.
+Tensorflow still utilizes the CPU extensively to coordinate training and perform a significant amount of calculations, but modern-day GPUs are nearly perfectly designed for the type of computations required for convolutions.
+
+A recent glut of libraries aimed at helping automate the deep learning deployment process has led to a variety of different software packages.
+NVIDIA's CUDA and CUDNN libraries, both of which are crucial for the performance of modern deep learning libraries, require a complex set of dependencies and installation procedures.
+To automate these processes, NVIDIA has recently released the \texttt{nvidia-docker} tool, which provides an abstraction on top of Docker that is designed to expose the GPU without requiring a complex installation method for the requisite GPU drivers.
+We use this library to deploy CUDNN v5, as well as the latest GPU drivers and Tensorflow version as of this writing (375.39 and 1.1.0-rc0, respectively).
+
+As Tensorflow's interface is best utilized in Python, we performed some initial testing with the Jupyter application.
+Jupyter exposes a dynamic notebook interface that allows ``cells'' of code to be run in an interactive instance, which also shows outputs inline.
+Despite being relatively useful for basic prototyping, the largely static nature of Tensorflow's graph structure meant that for the larger tests, there was little to no developer-side improvement over traditional coding, which we eventually reverted to.
+Nevertheless, we note that Jupyter is a useful interface for demonstrating concepts, as many Tensorflow code examples online are in Jupyter \texttt{.ipynb} format.
+In particular, GitHub supports native inline presentation of Jupyter notebooks, which proved to be far more efficient than the typical workflow of downloading code examples, waiting for execution, and parsing terminal output which is often difficult to link to specific code sections.
+This allows us to cleanly adapt existing code, which helped significantly when doing intial development of the experiments.
+
+\subsection{Implementation Details \& Notes}
+Throughout our experiments, we utilize the Adam optimizer developed by Kingma and Ba \cite{kingma2014adam} as it allows adaptive training without requiring the careful learning rate tuning that is generally required for straightforward gradient-descent optimization.
+Many typical optimizers require handholding through epochs to achieve optimal results, while the default parameters for Adam allow far less supervision.
+In particular, hyperparameter search can often involve determining the correct timings of when to drop learning rate, which ``slows'' the network's training but also serves to stabilize it.
+As we aim for our algorithm to be as high-level as possible, this represents yet another dimension of optimization, which lies outside of the scope this thesis.
+
+We also rely on Glorot and Bengio's Xavier initializer \cite{glorot2010understanding} to initialize the weights of the network, as it is a common improvement over typical random initialization, but is still relatively simple to use.
+This poses a small relevant side note to our algorithm; because only parts of the network are initially exposed, the initializer is potentially using incorrect values.
+Network initialization is crucial to achieving good results (one of the famous papers is this field is humorously entitled \emph{All you need is a good init} \cite{mishkin2015all}), and these initializers are dependent on the shape of the variable to determine properties like the variance of a random distribution.
+Due to the lack of dynamic initialization in Tensorflow, we do not investigate this issue further.
+Future work may include developing a custom initializer for this problem.
+
+We fix portions of the network by using Tensorflow's \texttt{tf.stop\_gradient} method.
+Support for freezing whole layers is a generally universal feature across deep learning libraries, but our investigation showed that none supported partial freezing---that is, the ability to train part of a layer while keeping the other part fixed.
+Notably, because we need to modify the amount of the layer that is fixed during runtime, it is impossible to decompose this problem into two separate layers.
+Our implementation involves deconstructing a variable into slices before reassembling it; a quick demonstration in pseudocode is presented in Listing~\ref{lst:var_deconst}.
+This kind of workaround for a lack of inbuilt dynamicism is a typical example of what was necessary to build the desired structure into Tensorflow.
+
+\begin{lstlisting}[caption={Variable Deconstruction}, label={lst:var_deconst}, captionpos=b]
+# x:              input, full-size variable
+# fix_capacity:   what portion of x to freeze
+# train_capacity: what porition of x to train,
+#                 assumed to be greater than fix_capacity
+f(x, fix_capacity, train_capacity):
+    # slice X according to each capacity
+    fixed = x[:fix_capacity]
+    train = x[fix_capacity:train_capacity]
+
+    # freeze fixed
+    fixed = stop_gradient(fixed)
+
+    # reassemble 
+    new_x = concat(fixed, train)
+
+    return new_x
+\end{lstlisting}
+
+In following with a common Tensorflow workflow, we separate the testing and training models rather than running them under the same code but with different inputs.
+This has the key benefit of allowing inference testing to be completely independent of the training loop.
+In our case, this allows us to run inference on the CPU, as it is both less computationally intensive and less time dependent; we note that this could be further extended to allow the testing dataset to be run on a completely different machine.
+However, this practice also comes with a few downsides, as training error becomes largely separated from testing error.
+Without careful matching of the epoch count between the two methods, it becomes impossible to compare the two except during runtime observation.
+We did not perform this matching due to a lack of time, so we do not report training and testing errors on the same timescales for our results.
+We believe our current data is sufficiently representative of our algorithm, but note that this could allow more discussion on generalizability metrics, which we expand on in a later section.

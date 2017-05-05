@@ -3,6 +3,22 @@
 
 \section{Regularization}
 
+An important part of fixing part of the network capacity is that it prevents the network from diverging significantly.
+This is, in effect, a form of regularization, which we can see most clearly in the function regression results.
+By fixing the majority of the network, the capability of the network to produce noisy results is far more limited.
+This may be an important property even if the network is unable to achieve significant improvements on a dataset, stability is an important goal of any training algorithm.
+
+Furthermore, this corroborates the known literature that network capacity is being used inefficiently.
+The ability for a network to function well despite only being able to train on a fraction of its capacity indicates that 
+
+It would be interesting to apply parameter deletion methods to the frozen capacity, as they generally try to involve minimal perturbation to the network.
+This would allow an efficient network to be constructed in-place, without requiring a significant amount of retraining.
+We had previously attempted a version of the algorithm that gradually unfreezes the network as an attempt to improve late-stage error, but were unable to detect any major differences between this algorithm and standard training.
+This indicates that the retraining process during most parameter deletion methods may be unnecessarily noisy, and we believe that our fixed capacity may help solve this problem.
+By utilizing extra capacity to correct for and smooth the errors of the fixed portion, the network is given what is potentially a simpler problem.
+We note that this is different from boosting or ensemble architectures due to the high degree of interconnection---as capacity is introduced, it is fully connected to all of the available capacity of the previous and next layers.
+This means that the learning is far more organized as a single unit rather than as small substructures.
+
 \emph{ < talk about how fixing network capacity may act as a regularizer > }
 
 \section{Generalization}
