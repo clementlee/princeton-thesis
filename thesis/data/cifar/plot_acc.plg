@@ -1,0 +1,19 @@
+set terminal epslatex lw 5
+
+#set terminal qt
+
+set output "cifar_accuracy.tex"
+
+set style line 1 lc rgb '#226699'
+set style line 2 lc rgb '#79bef2'
+set style line 3 lc rgb '#ee7f2d'
+
+#set logscale y 10
+set xlabel "epoch"
+set ylabel "accuracy"
+
+set size ratio 0.5
+
+plot "base.txt" using ($1) title "standard" with lines ls 1, \
+    "test1.txt" using ($1) title "adaptive-1" with lines ls 2, \
+    "test2.txt" using ($1) title "adaptive-2" with lines ls 3

@@ -108,7 +108,7 @@ It consists of 20 classes, each with 5 subclasses.
 For each of the 100 subclasses, there are 500 training images and 100 testing images.
 The images are in color, but are of low resolution at $32\times 32$; the small size of the dataset makes it especially attractive as an experimental problem; a few sample images are shown in Figure~\ref{fig:cifar100}.
 Larger image classification datasets exist, such as the commonly used ImageNet, but due to its over 150GB download size and consequently longer training times, it was not considered for this thesis.
-Most modern deep learning papers include results on both CIFAR-10 (a smaller version of the same problem) and CIFAR-100; we choose CIFAR-100 as state of the art performance on CIFAR-10 is over 90\%, leading to a closer and less separable grouping of experimental results.
+Most modern deep learning papers include results on both CIFAR-10 (a smaller version of the same problem) and CIFAR-100. Because state of the art performance on CIFAR-10 is over 90\% which leads to a closer and less separable grouping of experimental results, we choose CIFAR-100.
 In doing this, we hope to avoid the problem seen on the MNIST dataset, where it is extremely difficult to improve on results that are already nearly perfect.
 
 \begin{figure}[!htb]
@@ -121,13 +121,15 @@ In doing this, we hope to avoid the problem seen on the MNIST dataset, where it 
 A particular point of interest with CIFAR-100 is that there are relatively few images per class.
 This means that it is a dataset for which overfitting is a critical concern.
 Typical algorithms, without any specially designed methods, can often achieve around 60\% accuracy on the testing dataset.
-This, however, tends to represent a hard limit, as training accuracy will usually hit nearly 100\% accuracy, meaning that the network has learned all it can from the training dataset.
+This, however, tends to represent a hard limit.
+Training accuracy will usually hit nearly 100\% accuracy, meaning that the network has learned all it can from the training dataset.
 The difference between testing and training accuracy, especially with the limited data available, is the primary area of improvement for modern algorithms.
 
-We perform a base experiment on a residual network with 30 residual blocks (60 layers), with channel sizes starting at 16 and increasing by a factor of two every 10 layers.
-This structure is an adapation of the original residual network, which was built for the ImageNet dataset, to CIFAR-100, which has much smaller images and therefore requires less capacity in the network.
+We perform a base experiment on a residual network with 30 residual blocks (60 layers), with channel sizes starting at 16 and increasing by a factor of 2 every 10 layers.
+This structure was originally built for the ImageNet dataset.
+However, we adapt it to CIFAR-100, which has much smaller images and therefore requires less capacity in the network.
 Again utilizing common practice, we use minibatches of size 128, and sample training accuracy every 100 steps.
-We allow training to proceed until error rates drop inperceptibly over a reasonably significant period of time; while this requires human judgment, it was also performed due to general time constraints.
+We allow training to proceed until error rates drop inperceptibly over a reasonably significant period of time.
 We see the expected training accuracy go to 100\%, but the testing accuracy hovers around 65\%, which is also in line with expectations.
 
 In our first experiment, we again use the same basic algorithm first developed for the sine experiment and let the network learn in tenths.
@@ -135,13 +137,43 @@ Observing the error rates from the static experiment, we let the network expand 
 This is an extremely restrictive network, and our results show that this is perhaps overconstrained for the problem; the training error peaks at 80\% while the testing error hovers around 58\%.
 While this is a noticeably poorer result, it is still interesting to note that the generalization appears to be better in this experiment, as the difference between the training and testing error falls from 35\% to 22\%.
 Even in the prior static baseline, there was never a comparably small difference between the training and testing error.
-This leads us to consider what might be the beginnings of a generalizability metric, which we discuss in the following chapter.
+This leads us to consider how we can better understand the generalizability of our algorithm, which we discuss in the following chapter.
+
+This performance is summarized in Figure~\ref{fig:cifar_accuracy}. % and Figure~\ref{fig:cifar_loss}.
+We include results from our final experiment, which we discuss below.
+Unfortunately, these results are based on the training loss and accuracy rather than testing accuracy, due to a few bugs in the software.
+Nevertheless, we provide this figure to demonstrate the difficulties in optimizing the standard network, as the adaptive methods are unable to achieve the same results.
+This also furthers our discussion on generalization.
+While the training error does not decrease as significantly, we are still able to tune the algorithm to surpass the standard network in our second experiment.
+
+
+\begin{figure}[!htb]
+\centering
+\resizebox{0.8\textwidth}{!}{\input{data/cifar/cifar_accuracy.tex}}
+\caption{CIFAR-100 training accuracy.}
+\label{fig:cifar_accuracy}
+\end{figure}
+
+%\begin{figure}[!htb]
+%\centering
+%\resizebox{0.8\textwidth}{!}{\input{data/cifar/cifar_loss.tex}}
+%\caption{CIFAR-100 training loss.}
+%\label{fig:cifar_loss}
+%\end{figure}
 
 We also note that that accuracy on the dataset is just one measure of precision.
 During our experiments, we also log the cross-entropy loss, which provides a sense of not just how likely the network was to get the right answer, but how confidently it did so.
-That is, while the accuracy is determined by picking the category with the highest activation, it may have been a very close decision.
+That is, while the accuracy is determined by picking the category with the highest activation, this choice may have been a very close decision.
 For example, on a binary classification problem with classes 0 and 1, where the correct response is nearly always 1, a network with constant output activations $[0.49, 0.51]$ would have extremely low error but high cross-entropy loss.
 Using this metric, we note that the cross-entropy loss is lower at the same training error for our methodology, indicating that its outputs are more regularized.
+
+To improve the performance of this algorithm, we perform another experiment where we gradually allow a limited proportion (50\%) of the network to unfreeze over time.
+We believe that this can be helpful in unlocking some of the limited capacity in the network; in particular, we note that the first few convolutional layers are fed into a very narrow pipeline of only 16 filters at full capacity.
+Our training algorithm limits this further, which may overly constrict the flow of information through the network.
+By leaving at least half of the capacity to be trained, we attempt to allow sufficient flow for better accuracy.
+This hypothesis is borne out by the results, which show that the new network (entitled ``Adaptive-2'' in the figures) is able to demonstrate a small but significant improvement over the standard network.
+We achieve a stable testing accuracy of 68\%, but interestingly, our training accuracy stabilizes at a lower point at around 95\%.
+The results of our experiments are summarized in full in Table~\ref{table:cifar}.
 
 \begin{table}[!htb]
 \centering
@@ -157,25 +189,15 @@ Adaptive-2 & 0.681            & 0.9557            & 0.1379        \\ \bottomrule
 \end{table}
 
 
-These results are summarized in table
-
-To improve the performance of this algorithm, we perform another experiment where we gradually allow a limited proportion (50\%) of the network to unfreeze over time.
-We believe that this can be helpful in unlocking some of the limited capacity in the network; in particular, we note that the first few convolutional layers are fed into a very narrow pipeline of only 16 filters at full capacity.
-Our training algorithm limits this further, which may overly constrict the flow of information through the network.
-By leaving at least half of the capacity to be trainable, we attempt to allow sufficient flow for better accuracy.
-This hypothesis is borne out by the results, which show that the new network (entitled ``Adaptive-2'' in the figures) is able to demonstrate a small but significant improvement over the standard network.
-We achieve a stable testing accuracy of 68\%, but interestingly, our 
-
-
-
 \section{Performance}
 We note that our algorithm involves nearly no overhead over the original architecture; a simple timing benchmark over 1000 epochs of MNIST indicates a performance difference of 3.5\% (37.9 seconds versus 36.6 seconds), which is well within the margin of error.
 Furthermore, by limiting the capacity of the network, we are able to achieve far faster initial training.
 The initial timing experiment was performed by applying the algorithm but forcing it to use the full capacity of the network initially; this is far from the original intent.
 By utilizing it in the same way as developed for the experiments, the first 1000 epochs of MNIST actually take 11.9 seconds, which is a huge improvement.
 This performance boost can make a significant difference over the course of a training cycle.
+
 While the algorithm takes more epochs to converge, the increased speed of working through the initial epochs is a significant boon.
 In general, any decrease in performance can likely be attributed to the more intricate methods required to perform basic variable operations, recalling Listing~\ref{lst:var_deconst}.
-These are generally considered to be minor; in fact, for most researchers, the choice of deep learning library is rarely for performance reasons, especially for single-GPU servers.
+These are generally considered to be minor; in fact, for most researchers, the choice of deep learning library is rarely made for performance reasons, especially for single-GPU servers.
 Nearly all of the time spent is within the intricacies of the CUDNN module which interfaces directly with the GPU.
 Our algorithm adds effectively no stress to the GPU, and can speed up training even when running at full capacity by fixing portions of the network, thus eliminating the need to perform the expensive gradient calculations.

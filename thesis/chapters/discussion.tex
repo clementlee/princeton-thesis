@@ -1,12 +1,12 @@
 \chapter{Discussion}
 Our results are highly promising, and additionally show some other tendencies, which we highlight in this chapter.
-Our algorithm appears work as a regularizer, ensuring that a network does not devolve into a suboptimal state.
-We are also able to see an improvement in generalization compared to a standard training regimes, which is a key benefit.
+Our algorithm appears to work as a regularizer, ensuring that a network does not devolve into a suboptimal state.
+We are also able to see an improvement in generalization compared to standard training regimes, which is a key benefit.
 Finally, we list a number of limitations and provide guidance and direction for potential future work.
 
 \section{Regularization}
 
-An important part of fixing part of the network capacity is that it prevents the network from diverging significantly.
+An important aspect of fixing part of the network capacity is that it prevents the network from diverging significantly.
 This is, in effect, a form of regularization, which we can see most clearly in the function regression results.
 By fixing the majority of the network, the capability of the network to produce noisy results is far more limited.
 This may be an important property even if the network is unable to achieve significant improvements on a dataset, stability is an important goal of any training algorithm.
@@ -27,19 +27,23 @@ This means that the learning is far more organized as a single unit rather than 
 \section{Generalization}
 As we noted briefly in the experiments, one of the interesting trends of the adaptive network was that it tended to overfit less, even if the full results were not as good.
 Interestingly, its generalization performance was better than the standard network at the same training error, indicating that it had potentially learned the problem better under a certain metric.
-We 
-
 Part of the hope with the algorithm is inspired by the idea that using less parameters prevents overfitting and allows for a model to be more general; this seems to be borne out by the results.
 Through various versions of the algorithm, we were able to perform improvements to the testing error consistently; this is despite the standard network having fully utilized the training set, reaching 0\% error.
-Our methods have shown consistent improvement, and most interestingly, our final CIFAR-100 test has lower training accuracy but higher testing accuracy than 
+Our methods have shown consistent improvement, and most interestingly, our final CIFAR-100 test has lower training accuracy but higher testing accuracy than the standard network.
 
-This is an interesting improvement to the standard network, as the imperfect training accuracy may indicate the further gains could be made by 
-
+This is an interesting improvement, as the imperfect training accuracy may indicate that further gains could be made on both accuracies, perhaps by better informing the optimizer.
+Crucially, the final fully-connected layer's capacity is currently modified along with the last convolutional layer, which could significantly impact the outputs.
+In keeping with modern trends that focus on maximizing convolutions throughout the network, residual networks do not depend significantly on fully-connected layers. 
+However, we believe that for the purposes of this algorithm, our results demonstrate the potential need for additional capacity that does not change as often.
+Along with our good generalization results, performing further higher-level architectural optimizations may help improve results even further. 
 
 \section{Limitations and Future Work}
-There are number of topics that were unfortunately outside the realm of reasonable exploration during the course of this thesis,
+There are number of topics that were unfortunately outside the realm of reasonable exploration during the course of this thesis.
+Many of these pertain to the specifics of our algorithm, which could see significant fine tuning.
+While our results are generally good, we believe that that are still major gains to be achieved by continuing along the same directions established by our work.
+This thesis provides an interesting result, but also opens up a variety of questions for future investigation.
 
-As noted throughout the thesis, whenever possible, we have preferred to attempt to maximally utilize the currently available methods rather than performing significant rewrites specific to our problem.
+As noted, whenever possible, we have preferred to maximally utilize the currently available methods rather than performing significant rewrites specific to our problem.
 This helped our work maintain its focus on the specifics of improving deep learning training, rather than work on significant reimplementations that would likely introduce new bugs into the system.
 At the same time, this could be an area of future work, as we have briefly discussed the potential limitations of using off-the-shelf initializers and optimizers.
 These restrictions are generally due to the lack of knowledge within the system, which could significant effects on the training capability of the network.
@@ -59,7 +63,15 @@ For our experiments, we continue to rely on densely-connected convolutional laye
 Apart from the natural computational efficiency, we note that sparse networks are generally utilized in problems where the problem is seen as less compact or able to exploit the sparse connections---such is not often the case for image classification, which is our primary subject in this thesis.
 We do note, however, that this would be a very interesting way of implementing dynamic network capacity that extends beyond our current implementation.
 Importantly, this may allow the network to suffer less shock as additional capacity is added by initially minimizing the number of connections between the original or fixed section and the newly-added training section.
-In this way, the sections can be trained somewhat like an ensemble of networks that gradually begins to learn some capacity for communication, and having control of this dynamic would be an extremely powerful tool.
+In this way, the sections can be trained somewhat like an ensemble of networks that gradually begins to learn some capacity for communication.
+Therefore, controlling this dynamic would be an extremely powerful tool.
+
+Another area of interest is the amount of dynamicism in the network architecture.
+Srivastava et al. explore Highway Networks \cite{srivastava2015highway}, which allow learned connections to form between any two layers.
+This is obviously a far more complex architecture, requiring additional connections in the network, but may be thought of as a higher-level abstraction over residual networks.
+Allowing the network to develop not just in per-layer capacity but also in layer connections could allow better mutability.
+The results regarding the training accuracy have shown that fixing significant capacity limits the ability of the network to overcome some of the errors caused by limitations of capacity.
+However, it is possible that increased connections between each layer would provide the necessary adaptations to learn the problem well, without adding a significant number of parameters to the whole network.
 
 While the hyperparameters for our algorithm were generally chosen on inspection of the testing baseline, we note that it may be possible to develop a reasonable set of defaults for an average user.
 This would be highly beneficial, as it further removes the necessity of tuning.
@@ -74,8 +86,3 @@ This means that by overwriting the current state variables of the algorithm, sub
 Especially with Google's Tensorboard software, which allows a Tensorflow network to show its computational graph, log various properties, and much more, we see the potential for users to gradually tune a network on-the-fly.
 In conjunction with our algorithm providing suggestions on network changes, it would be interesting to allow a more technical user to query specific statistics about the network, then make decisions on tuning without necessitating a new and costly training cycle.
 This kind of fine-grained architectural control during runtime is completely new to the literature, so we see our work as a foundational first step.
-The 
-
-
-\emph{ < talk about shortcut connections, different trainable parameters, also extend literature to other directions of optimization > }
-

@@ -1,31 +1,41 @@
 \chapter{Background}
 
 In this section, we provide a general introduction to the relevant basics of deep learning.
+We begin by outlining the basics of neural networks and their historical theory.
+Neural networks are, however, insufficient for most modern day tasks, so we introduce convolutions and convolutional neural networks.
+We additionally provide some information on common training methods in modern deep learning and how they are applied to our thesis.
+Finally, we describe residual networks, which we utilize for our experiments.
 
+% first establish nn theory
+% however nn theory = basic, modern day shit utilizes cnn
+% training
+% resnetwork
 
 \section{Neural Networks}
-The foundational principle of neural networks is, in its purest form, inspired by the biology of the human brain.
-The field of AI has often modelled new algorithms after biological phenomena; in this field, genetic algorithms are based on evolution and particle swarm optimization is based on social behaviors.
-The history of neural networks dates back to the beginnings of artificial intelligence research, and from those times a few fundamentals still remain.
+In its purest form, the foundational principle of neural networks is inspired by the biology of the human brain.
+Neural networks are a subset of the larger field of artificial intelligence (AI).
+Researchers in AI have often modelled new algorithms after biological phenomena. For example, genetic algorithms are based on evolution and particle swarm optimization is based on animal social behaviors.
+Historically, neural networks emerged in the very beginnings of artificial intelligence research, and from those times a few core fundamentals still remain.
 
-Firstly, the structure of a basic feedforward network was established.
+Establishing the structure of a basic feedforward network was the first important step.
 In a general sense, a neural network is a directed graph, with neurons as nodes and weights as edges.
-Every neuron activates (outputs) with a strength that is a function that is the element-wise multiplication of the inputs with the edge weights.
+Every neuron activates, or outputs, with a strength that is a function that is the element-wise multiplication of the inputs with the edge weights.
 That is, if $w_{i,j}$ is the weight value between nodes $i$ and $j$, $n_i$ is the activation of node $i$, and $N_j$ is the list of node indices that are connected to $j$, then node $j$ will activate with strength
 \[n_j = F\left(\sum_{i \in N_j} w_{i,j}n_i \right)\]
 This definition relies on an activation function $F$, which allows the network to produce nonlinear behaviors.
 We can provide input into the neural network by activating a set of nodes with specific values, and we can similarly read output from any subset of nodes.
-A feedforward network is then any acyclic neural network.
+A feedforward network is then any acyclic neural network graph.
 These networks are typically organized in layers of neurons, which indicate the depth of each node.
 In this model, layers are typically fully connected, meaning that all nodes in one layer are connected to all nodes of the next layer.
 This allows a computationally-efficient model of weights as a matrix $M$, taking input vector $V$ to output vector $MV$.
 
 Throughout modern literature, feedforward networks are an important but rarely examined component; the structure is often considered fixed and serves to provide a final classification.
-Key limitations to fully connected layers prevent them from being suitable for use as the sole structure of larger networks.
+Key limitations of fully-connected layers prevent them from being suitable for use as the sole structure of larger networks.
 For example, because of the fully connected nature of the layers, they require an immense amount of memory.
 Such a layer between two sets of just 10000 nodes would require 100 million parameters, while modern networks often have a total of 10 million parameters \cite{han2015learning}.
 This extra capacity, while being inefficient, can also be bad for training in general; there is no sense of locality in such a layer, as every node is treated individually.
 This means that it is difficult and nearly impossible to train higher level features that should be treated equally across all areas of the input (which is of particular interest to problems like image classification).
+Even with these limitations, fully-connected layers remain critical for the task they perform.
 
 The other key insight of neural networks is backpropagation \cite{hecht1988theory}, which is an algorithm to let errors accumulated from the output layer of the network propagate backwards through the network, training it in the process.
 As in the example above, if the network's output is $O$, but the correct response would be $C$, we can calculate the error $E = O - C$.
@@ -33,15 +43,10 @@ From this, we need a cost function that determines how errors are judged; a typi
 \[\Cost(O - C) = \sum_0^n || O_i - C_i ||^2 \]
 However, since we know that
 \[O = F\left(\sum_0^n w_i a_i\right)\]
-it is possible to figure out the influence each weight had on the error by taking the partial derivative of the cost function with respect to the weight,
-\begin{align*}
-\frac{\partial \Cost}{\partial a_i} &= 
-\end{align*}
+it is possible to figure out the influence each weight had on the error by taking the partial derivative of the cost function with respect to the weight.
+Utilizing this partial derivative, each weight can be modified as a result of the layer after it.
+This allows the weight updates to propagate backwards through the network, which gives the algorithm its name.
 Modern training methods are far more advanced, but still rely on the basic algorithm described here, which is often termed gradient descent.
-The main 
-
-\emph{< describe modern usage of backprop >}
-
 LeCun et al.'s seminal work in this field, \emph{Gradient-Based Learning Applied to Document Recognition} \cite{lecun1998gradient}, provided the first basis of using backpropagation methodologies to train visual classifiers.
 Even more importantly, it introduced the fundamental structure of the modern visual deep learning network.
 In its usage of convolutions as a method for extracting high-level features out of larger images, it set the framework for a new style of network that would prove to be far more efficient and scalable.
@@ -91,14 +96,39 @@ This allows the CNN to determine what kinds of high-level feature extraction is 
 More importantly, this allows for networks to automatically chain convolutional layers, in which the initial information can pass through multiple layers of feature extraction, which are all automatically determined from the training data.
 
 \section{Modern Training}
-While the basics of neural network training are covered above, there are significant improvements that we highlight in this section for the sake of completeness.
-%batchnorm
+While the basics of neural network training are covered above, there are significant improvements that we highlight in this section for the sake of completeness. 
 
-\emph{< talk about batch normalization, dropout, different activation functions >}
+When training a network using gradient descent methods, all of the weights are updated simultaneously.
+This means that the weight update mechanism can be somewhat chaotic, as there is nothing stabilizing a layer from the changes in the previous and following layers, resulting in a problem called covariate shift.
+To tackle this, Ioffe and Szegedy introduce batch normalization \cite{ioffe2015batch}, which helps to solve this problem by computing summary statistics of the training batch and allows a trained parameter to help normalize the layer activations.
+Batch normalization has become a common tool in most deep learning libraries and it is almost universally utilized in modern architectures for improving performance without adding a significant number of trainable parameters.
+For our work, we partially rewrite common implementations of Ioffe and Szegedy's method in order to accommodate for shifting layer capacities.
 
-%dropout
+With network sizes often reaching the millions of parameters, the problem of ensuring that each neuron is contributing and learning something different becomes significantly more difficult.
+This was quickly observed as deep learning became more popular as a discipline, and larger networks proved nearly impossible to train.
+Hinton et al. utilize Dropout \cite{hinton2012improving, srivastava2014dropout} to solve this issue.
+This method randomly drops certain neurons during training, ensuring that neurons cannot coadapt to each other.
+While rather basic in its implementation, dropout has proved to be a crucial part of modern training regimes, and helps dramatically with 
+For our thesis, we do not rely on dropout because the networks we adapt do not depend on it.
+In particular, residual network topologies generally do not use dropout, as they would dramatically hinder the intended flow of data through the network.
 
-%activation functions (relu, prelu, elu, pelu)
+The nonlinear activation function used by every neuron has also become a significant topic of debate.
+Originally, many neural networks were designed either with the sigmoid or hyperbolic tangent activations.
+This is generally seen as effective for smaller networks, but less so for larger networks, as both asymptotically reach $\pm 1$.
+This results in the gradients becoming zero for large values, which slows training dramatically.
+Nair and Hinton improve on this using rectified linear units \cite{nair2010rectified}, often referred to as ReLUs.
+This activation function is defined by 
+\[f(x) = \begin{cases}x, & x \geq 0 \\ 0, & x < 0\end{cases}\]
+and despite being very simple, has become an extremely common activation function.
+Some have noted, however, that the gradients being zero for all negative values may be somewhat problematic, so a number of solutions have been proposed.
+Leaky ReLUs \cite{maas2013rectifier} were a modification that replace the $x < 0$ case with a constant ``leakiness'' $l < 1$:
+\[f(x) = \begin{cases}x, & x \geq 0 \\-lx, & x < 0\end{cases}\]
+This was further enhanced with He et al.'s work with PReLU \cite{he2015delving}, which allow the parameter $l$ to be trained.
+PReLUs have been seen as a way of introducing small numbers of parameters (as there is only one per node) into a network, rather than modifying the network's architecture significantly.
+This finally led to ELU (Exponential linear units) by Clevert et al., which are defined as
+\[f(x) = \begin{cases}x, & x \geq 0 \\\alpha (e^x -1), & x < 0\end{cases}\]
+Clevert et al. also note, importantly, that negative activations (which are not present in ReLU), are important for preventing extreme network biases, much in the same way as batch normalization.
+To our knowledge, this is one of the best known modern activation functions, so we utilize it throughout our experiments.
 
 \section{Residual Networks}
 As network architectures have changed over time, an ongoing goal has been to develop truly deep architectures.
@@ -109,10 +139,11 @@ The issue of disappearing gradient is in some form mitigated by training methods
 However, regardless of the specific algorithm, gradients are effectively unusable for networks with significant depth for typical network architectures.
 
 To solve this problem, He et al. \cite{he2016deep} developed Residual Networks.
-The insight in this work is that typical network layers are effectively performing two tasks simultaneously---the transfer of state alongside feature extraction/classification.
+Within the typical neural network structure, network layers are effectively performing two tasks simultaneously---the transfer of state alongside feature extraction/classification.
 The former requirement necessitates that the layer learn an encoding of its input, which is inefficient.
-He et al. rewrite the typical neural network architecture to allow it to merely learn the latter task, and apply this as a residual (or equivalently, difference) to the inputs.
-That is, if a typical neural network layer takes input $X$, it will apply the layer $L$ to produce $L(X)$.
+He et al. rewrite the typical neural network architecture to allow the network to focus on the latter task, while the architecture handles the former. 
+This is done by applying a residual (or equivalently, difference) to the inputs.
+If a typical neural network layer takes input $X$, it will apply the layer $L$ to produce $L(X)$.
 A residual network layer takes the input, then outputs the layer's contribution in summation with the original input to produce $L(X) + X$.
 Beyond the theoretical improvements to the ``task'' of the layer, it is also crucially important that this identity mapping for $X$ in a residual layer allows the gradient to propagate backwards with its original magnitude.
 This ensures that the gradient is present at every layer with reasonable strength, allowing the calculations for error on the specific layer operation $L$ to be done with less noise.
@@ -123,9 +154,8 @@ With regards to this thesis, residual networks have a very important property th
 This means that it is easier to insert and remove residual network layers than in typical architectures.
 Along these lines, Huang et al. \cite{huang2016deep} introduce Stochastic Depth, which randomly drops layers during the training phase as a form of regularization and ensuring that every layer learns something different.
 This is very similar to the usage of Dropout in training, except entire layers are dropped.
+For the purposes of residual networks, this often helps the testing error.
 
 Further expanding on He et al.'s work, Zaguruyko and Komodakis \cite{zagoruyko2016wide} assert that residual networks are equally suited to creating wide networks as they are for deep ones; their testing indicates that it is possible to use the residual network framework effectively for networks of comparatively shallow depth (16 layers).
-This is of particular interest because it indicates the difficulty of determining optimal network architectures; the benefits of wide residual networks are dependent on the specific classification problem, and the 
-
-\emph{ < talk about the wide varieties of residual network architectures, and how it's hard to pick the right one > }
- 
+This is of particular interest because it indicates the difficulty of determining optimal network architectures; the benefits of wide residual networks are dependent on the specific classification problem.
+This thesis aims to improve on the often-confusing area of architectural optimization by allowing automatic hyperparameter tuning.
