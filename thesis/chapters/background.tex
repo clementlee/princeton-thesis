@@ -17,9 +17,9 @@ Neural networks are a subset of the larger field of artificial intelligence (AI)
 Researchers in AI have often modelled new algorithms after biological phenomena. For example, genetic algorithms are based on evolution and particle swarm optimization is based on animal social behaviors.
 Historically, neural networks emerged in the very beginnings of artificial intelligence research, and from those times a few core fundamentals still remain.
 
-Establishing the structure of a basic feedforward network was the first important step.
+Firstly, the structure of a basic feedforward network was established.
 In a general sense, a neural network is a directed graph, with neurons as nodes and weights as edges.
-Every neuron activates, or outputs, with a strength that is a function that is the element-wise multiplication of the inputs with the edge weights.
+Every neuron activates, or outputs, with a strength that is a function of the element-wise multiplication of the inputs with the edge weights.
 That is, if $w_{i,j}$ is the weight value between nodes $i$ and $j$, $n_i$ is the activation of node $i$, and $N_j$ is the list of node indices that are connected to $j$, then node $j$ will activate with strength
 \[n_j = F\left(\sum_{i \in N_j} w_{i,j}n_i \right)\]
 This definition relies on an activation function $F$, which allows the network to produce nonlinear behaviors.
@@ -35,7 +35,7 @@ For example, because of the fully connected nature of the layers, they require a
 Such a layer between two sets of just 10000 nodes would require 100 million parameters, while modern networks often have a total of 10 million parameters \cite{han2015learning}.
 This extra capacity, while being inefficient, can also be bad for training in general; there is no sense of locality in such a layer, as every node is treated individually.
 This means that it is difficult and nearly impossible to train higher level features that should be treated equally across all areas of the input (which is of particular interest to problems like image classification).
-Even with these limitations, fully-connected layers remain critical for the task they perform.
+However, even with these limitations, fully-connected layers remain critical for the task they perform.
 
 The other key insight of neural networks is backpropagation \cite{hecht1988theory}, which is an algorithm to let errors accumulated from the output layer of the network propagate backwards through the network, training it in the process.
 As in the example above, if the network's output is $O$, but the correct response would be $C$, we can calculate the error $E = O - C$.
@@ -44,7 +44,7 @@ From this, we need a cost function that determines how errors are judged; a typi
 However, since we know that
 \[O = F\left(\sum_0^n w_i a_i\right)\]
 it is possible to figure out the influence each weight had on the error by taking the partial derivative of the cost function with respect to the weight.
-Utilizing this partial derivative, each weight can be modified as a result of the layer after it.
+Utilizing this partial derivative, each weight can be modified as a result of the following layer.
 This allows the weight updates to propagate backwards through the network, which gives the algorithm its name.
 Modern training methods are far more advanced, but still rely on the basic algorithm described here, which is often termed gradient descent.
 LeCun et al.'s seminal work in this field, \emph{Gradient-Based Learning Applied to Document Recognition} \cite{lecun1998gradient}, provided the first basis of using backpropagation methodologies to train visual classifiers.
@@ -57,12 +57,12 @@ The operation is generally defined as
 \[(f * g)(t) = \int_{-\infty}^\infty f(r)g(t-r) dr\]
 In the perspective of modern deep learning, we are primarily interested in its usage as a matrix operator; in this context, we limit the range of $g$ to the size of the matrix $s$ such that
 \[(f * g)(t) = \int_0^s f(r)g(t-r) dr\]
-In this context, we refer to $g$ as the \emph{convolutional kernel}.
+We refer to $g$ as the convolutional kernel.
 Using a convolutional kernel to preprocess the image proves to be critical to the performance of modern deep learning methods, as a small kernel can operate over a large image in parallel.
 
-For example, we consider the basic edge-detecting matrix 
+For example, consider the basic edge-detecting matrix 
 \[E = \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0\end{bmatrix}\]
-This convolution will perform the element-wise matrix multiplication of the kernel $E$ with the immediate neighbors of each pixel, then aggregate the elements by summation.
+This convolution will perform the element-wise matrix multiplication of the kernel $E$ with the immediate neighbors of each pixel, and then aggregate the elements by summation.
 That is, if the pixel values around a specific pixel $e$ are 
 \[P_e = \begin{bmatrix} a & b & c \\ d & e & f \\ g & h & i\end{bmatrix}\]
 then the convolution at that pixel will be
@@ -92,30 +92,29 @@ Figure~\ref{fig:gimp_edge} shows this convolution applied to an arbitrary image.
 
 A convolutional neural network is therefore the product of chaining together convolutions to perform efficient feature extraction with the standard feedforward neural network structure.
 LeCun's contribution to this structure was showing that the same backpropagation methods used to train other networks could also be applied to convolutional layers, allowing convolutional neural networks (CNNs) to learn their own feature extractors.
-This allows the CNN to determine what kinds of high-level feature extraction is necessary for the specific problem; applying this across a variety of filters demonstrates 
+This allows the CNN to determine what kinds of high-level feature extraction is necessary for the specific problem.
 More importantly, this allows for networks to automatically chain convolutional layers, in which the initial information can pass through multiple layers of feature extraction, which are all automatically determined from the training data.
 
 \section{Modern Training}
-While the basics of neural network training are covered above, there are significant improvements that we highlight in this section for the sake of completeness. 
+While the basics of neural network training are covered above, there are significant improvements that we highlight in this section. 
 
 When training a network using gradient descent methods, all of the weights are updated simultaneously.
 This means that the weight update mechanism can be somewhat chaotic, as there is nothing stabilizing a layer from the changes in the previous and following layers, resulting in a problem called covariate shift.
-To tackle this, Ioffe and Szegedy introduce batch normalization \cite{ioffe2015batch}, which helps to solve this problem by computing summary statistics of the training batch and allows a trained parameter to help normalize the layer activations.
+To tackle this, Ioffe and Szegedy introduce batch normalization \cite{ioffe2015batch}, which helps by computing summary statistics of the training batch and allows a trained parameter to normalize the layer activations.
 Batch normalization has become a common tool in most deep learning libraries and it is almost universally utilized in modern architectures for improving performance without adding a significant number of trainable parameters.
-For our work, we partially rewrite common implementations of Ioffe and Szegedy's method in order to accommodate for shifting layer capacities.
+For our work, we partially rewrite common implementations of Ioffe and Szegedy's method in order to accommodate shifting layer capacities.
 
 With network sizes often reaching the millions of parameters, the problem of ensuring that each neuron is contributing and learning something different becomes significantly more difficult.
 This was quickly observed as deep learning became more popular as a discipline, and larger networks proved nearly impossible to train.
 Hinton et al. utilize Dropout \cite{hinton2012improving, srivastava2014dropout} to solve this issue.
 This method randomly drops certain neurons during training, ensuring that neurons cannot coadapt to each other.
-While rather basic in its implementation, dropout has proved to be a crucial part of modern training regimes, and helps dramatically with 
+While rather basic in its implementation, dropout has proved to be a crucial part of modern training regimes, and helps dramatically with overfitting errors.
 For our thesis, we do not rely on dropout because the networks we adapt do not depend on it.
 In particular, residual network topologies generally do not use dropout, as they would dramatically hinder the intended flow of data through the network.
 
 The nonlinear activation function used by every neuron has also become a significant topic of debate.
 Originally, many neural networks were designed either with the sigmoid or hyperbolic tangent activations.
-This is generally seen as effective for smaller networks, but less so for larger networks, as both asymptotically reach $\pm 1$.
-This results in the gradients becoming zero for large values, which slows training dramatically.
+This is generally seen as effective for smaller networks, but less so for larger networks, as both asymptotically reach $\pm 1$, resulting in the gradients becoming zero for large values, which slows training dramatically.
 Nair and Hinton improve on this using rectified linear units \cite{nair2010rectified}, often referred to as ReLUs.
 This activation function is defined by 
 \[f(x) = \begin{cases}x, & x \geq 0 \\ 0, & x < 0\end{cases}\]
@@ -141,7 +140,7 @@ However, regardless of the specific algorithm, gradients are effectively unusabl
 To solve this problem, He et al. \cite{he2016deep} developed Residual Networks.
 Within the typical neural network structure, network layers are effectively performing two tasks simultaneously---the transfer of state alongside feature extraction/classification.
 The former requirement necessitates that the layer learn an encoding of its input, which is inefficient.
-He et al. rewrite the typical neural network architecture to allow the network to focus on the latter task, while the architecture handles the former. 
+Therefore, He et al. rewrite the typical neural network architecture to allow the network to focus on the latter task, while the architecture handles the former. 
 This is done by applying a residual (or equivalently, difference) to the inputs.
 If a typical neural network layer takes input $X$, it will apply the layer $L$ to produce $L(X)$.
 A residual network layer takes the input, then outputs the layer's contribution in summation with the original input to produce $L(X) + X$.

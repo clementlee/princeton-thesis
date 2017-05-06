@@ -24,7 +24,7 @@ By retraining the network repeatedly after removing connections, they are able t
 This was taken a step further by Hassibi et al. \cite{hassibi1993second} in their followup work, \emph{Optimal Brain Surgeon}.
 By analyzing the Hessian matrix of typical networks, they show that the Hessian matrix is often nondiagonal, and that Optimal Brain Damage can often irreparably destroy small networks.
 They utilize the full Hessian matrix to better understand the interactions between each pair of weights.
-Hassibi et al.'s algorithm is among the most detailed methods shown to delete weights from a network, and they show that their algorithm is in fact optimal for specific small networks.
+Hassibi et al.'s algorithm is among the most detailed methods shown to delete weights from a network, and they find that their algorithm is in fact optimal for specific small networks.
 However, the calculation of the Hessian is an $O(n^2)$ operation in both space and time, making it largely unsuitable for networks in the modern age, where $n$ (the number of parameters) is often in the millions or tens of millions.
 
 Within the last few years, an increasing amount of literature has been published on parameter deletion, especially as network complexity has grown at a pace that far outpaces the corresponding technological advancements.
@@ -34,7 +34,7 @@ They have limited application on GPUs and especially on convolutions.
 To solve this problem, Hu et al. \cite{hu2016network} trim entire nodes and convolutions from the network, allowing better performance by fully removing them from the layers.
 They improve on Han et al.'s results by producing networks that are smaller and more accurate, and are even able to see some extremely small improvements over the untrimmed network for some of the largest networks.
 They hypothesize that this is due to optimizer efficiency.
-However, we note that despite showing that it is possible to reduce parameter count significantly, no modern work has shown measurably better overall results.
+However, we note that despite showing that it is possible to reduce parameter count significantly, no modern work has measurably better overall results.
 These results are further supported by Murray and Chiang \cite{murray2015auto}, who utilize the same methodologies on natural language modelling and observe similar performance.
 Instead, the goal is generally to minimize model size while keeping accuracy fixed (or reducing it slightly).
 In this thesis, we aim to more efficiently utilize existing capacity and achieve improved results over the architectures we start with.
@@ -64,13 +64,13 @@ Even though inference is generally more efficient, it can still remain a difficu
 \section{Network Expansion}
 The counterpart to parameter deletion is network expansion, which tries to add parameters and learning capacity to a network dynamically.
 One of the important works in this field is Cascade-Correlation Learning by Fahlman and Lebiere \cite{fahlman1990cascade}, which fixes a network and gradually adds single nodes to the network at a time.
-Their proposed network learns without backpropagation but rather by adding new nodes in order to deal with error.
+Their proposed network learns without backpropagation but rather through adding new nodes in order to correct for error.
 We derive some inspiration for our algorithm in Fahlman and Lebiere's interesting link between introduction of learning capacity and freezing the original network.
 The main difficulty with their specific algorithm is that it depends on adding individual nodes, which would be prohibitively slow to generate the network sizes that are common in the modern age.
-Additionally, we do not know if any work that utilizes their findings in a way that is able to take advantage of convolutions.
+Additionally, we are unaware of any existing work that utilizes their findings in a way that is able to take advantage of convolutions.
 
 An alternative way of thinking about this problem was tackled by Chen et al. They develop Net2Net \cite{chen2015net2net}, which takes a pretrained smaller network and allows a partial transfer of these learned weights to an expanded network.
-Noting that modern deep learning research usually requires the training of a number of different networks, they develop an architecture to minimize the amount of repeated computation.
-They are able to achieve improved results on the ImageNet dataset.
+Noting that modern deep learning research usually requires the training of a number of different networks, they develop an architecture to minimize the amount of repeated computation, and are able to achieve improved results on the ImageNet dataset.
+
 In general, network expansion is an understudied topic in the modern literature, and we believe that there is significant room for improvement, especially with regards to modern deep networks.
 We aim to provide a form of this by introducing dynamic network capacity, which allows layers to resize up to a fixed size during runtime.

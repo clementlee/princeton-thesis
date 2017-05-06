@@ -6,7 +6,7 @@ We then discuss the implementation process and its surrounding details.
 
 \section{Dynamic Network Capacity}
 Network design has almost always focused on preferring overparametrization; this principle is clear because underparametrized networks, by definition, simply cannot learn the problem.
-Our method involves defining the network in such a way that network capacity can be expanded with minimal overparametrization in a way that, to the best of our knowledge, is unique in the literature.
+Our method involves defining the network in such a way that network capacity can be expanded with minimal overparametrization in a way that is unique in the literature.
 We reshape the underlying architecture to accept two parameters for each layer, representing the fixed capacity and training capacity.
 We define the fixed capacity of a layer as the number of nodes (or kernels, in the case of a convolutional layer) that are fixed from all training, and the training capacity as the number of nodes that are actively being trained.
 Crucially, these two capacities can change at any moment, and do not have to sum up to the full capacity of the network, meaning that some nodes can remain entirely unused.
@@ -55,7 +55,7 @@ Tensorflow imposes a style of computation which is not immediately adaptable to 
 Its popularity has largely affected the number of open-source code samples available, and many current architectures have clear examples in Tensorflow.
 The thriving ecosystem of open-source contributions around Tensorflow proved to be a highly beneficial factor in providing a variety of existing architectures for experimentation.
 
-As was noted before, Tensorflow operates in a slightly different way than many other libraries.
+Tensorflow operates in a slightly different way than many other libraries.
 Rather than allowing the user to chain together operations at random, it fixes a computational graph which defines the full model.
 Google's developers preferred this static model as it is generally well-suited to a lot of deep learning research, while also being flexible enough to allow for distributed computing (of crucial importance to a a cloud company like Google).
 This, however, poses an obvious problem with our algorithm, which is largely dynamic.
@@ -64,7 +64,7 @@ While it is possible to use conditional blocks to disable parts of the graph, it
 As such, the entire possible network capacity has to be allocated upfront, which potentially reduces the range of experimentation.
 This additionally means that while parts of the network can be disabled, they still take important parameter space which cannot be reallocated to other parts of the network.
 
-Other libraries were explored briefly, but they either did not provide the necessary flexibility or lacked a reasonable set of tutorials/examples to facilitate the work within this thesis.
+Other deep learning software packages were explored briefly, but they either did not provide the necessary flexibility or lacked a reasonable set of tutorials/examples to facilitate the work within this thesis.
 For example, one of the more common tools in image-based deep learning has been Caffe \cite{jia2014caffe}, which boasts well-tuned performance as well as a public repository of models in the Caffe Model Zoo.
 Unfortunately, since Caffe is written almost entirely in C++, it is largely unamenable to testing and infrastructure development.
 Modifying Caffe to implement new training methods typically requires a significant contribution in C++, which requires an overhead not often undertaken except by researchers with significant prior experience.
